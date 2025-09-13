@@ -21,21 +21,20 @@ export default function VisitorCounter({ username, repos }: VisitorCounterProps)
         const hasVisited = localStorage.getItem('hasVisited');
 
         if (!hasVisited) {
-          // New device: increment global counter
-          const response = await fetch('/api/visitor', { method: 'POST' });
+          // New device: increment global counter using CountAPI
+          const response = await fetch('https://api.countapi.xyz/hit/mydevfolio/visitors');
           const data = await response.json();
-          setVisitorCount(data.count);
+          setVisitorCount(data.value);
           localStorage.setItem('hasVisited', 'true');
         } else {
           // Existing device: just get current count
-          const response = await fetch('/api/visitor');
+          const response = await fetch('https://api.countapi.xyz/get/mydevfolio/visitors');
           const data = await response.json();
-          setVisitorCount(data.count);
+          setVisitorCount(data.value);
         }
       } catch (error) {
-        // Fallback to local count if API fails
-        const localCount = parseInt(localStorage.getItem('visitorCount') || '1', 10);
-        setVisitorCount(localCount);
+        // Fallback if API fails
+        setVisitorCount(1);
       }
 
       // Try to fetch GitHub repository views if username and repos are available
