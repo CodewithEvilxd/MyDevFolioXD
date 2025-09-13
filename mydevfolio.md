@@ -1,6 +1,6 @@
 # MyDevFolioXD
 
-![MyDevFolioXD Banner](https://raw.githubusercontent.com/Harshrawat27/MyDevFolioXD/refs/heads/main/public/MyDevFolioXD.png)
+![MyDevFolioXD Banner](https://raw.githubusercontent.com/codewithevilxd/MyDevFolioXD/refs/heads/main/public/mydevfolio.png)
 
 ## Your GitHub Profile Transformed Into a Stunning Portfolio
 
