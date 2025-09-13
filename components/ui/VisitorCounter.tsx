@@ -16,21 +16,26 @@ export default function VisitorCounter({ username, repos }: VisitorCounterProps)
 
   useEffect(() => {
     const initializeCounter = async () => {
-      // Check if already counted in this session to avoid refresh increments
-      const hasVisitedSession = sessionStorage.getItem('hasVisitedSession');
+      try {
+        // Check if this device has already been counted
+        const hasVisited = localStorage.getItem('hasVisited');
 
-      if (!hasVisitedSession) {
-        // Get existing visitor count for this device/browser
-        const existingCount = parseInt(localStorage.getItem('visitorCount') || '0', 10);
-        const newCount = existingCount + 1;
-
-        setVisitorCount(newCount);
-        localStorage.setItem('visitorCount', newCount.toString());
-        sessionStorage.setItem('hasVisitedSession', 'true');
-      } else {
-        // Just display the existing count without incrementing
-        const existingCount = parseInt(localStorage.getItem('visitorCount') || '1', 10);
-        setVisitorCount(existingCount);
+        if (!hasVisited) {
+          // New device: increment global counter
+          const response = await fetch('/api/visitor', { method: 'POST' });
+          const data = await response.json();
+          setVisitorCount(data.count);
+          localStorage.setItem('hasVisited', 'true');
+        } else {
+          // Existing device: just get current count
+          const response = await fetch('/api/visitor');
+          const data = await response.json();
+          setVisitorCount(data.count);
+        }
+      } catch (error) {
+        // Fallback to local count if API fails
+        const localCount = parseInt(localStorage.getItem('visitorCount') || '1', 10);
+        setVisitorCount(localCount);
       }
 
       // Try to fetch GitHub repository views if username and repos are available
