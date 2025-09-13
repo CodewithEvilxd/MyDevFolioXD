@@ -23,7 +23,7 @@ export * from './ai';
 export * from './visualizations';
 
 // Astral Components
-export * from './astral';
+export { default as AstralPortfolioNavigation } from './astral/AstralPortfolioNavigation';
 
 // Culinary Components
 export * from './culinary';

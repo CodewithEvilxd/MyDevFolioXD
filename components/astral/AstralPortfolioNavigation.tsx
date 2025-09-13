@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Repository } from '@/types';
+import { Repository } from '../../types';
 
 interface AstralPortfolioNavigationProps {
   username: string;
