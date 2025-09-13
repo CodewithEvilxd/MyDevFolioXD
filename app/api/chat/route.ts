@@ -1,5 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+async function tryOpenAI(message: string, systemPrompt: string) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: message
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7,
+        top_p: 0.9
+      })
+    });
+
+    if (!response.ok) {
+      console.log('OpenAI failed, trying OpenRouter...');
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.log('OpenAI invalid response, trying OpenRouter...');
+      return null;
+    }
+
+    return {
+      response: data.choices[0].message.content,
+      provider: 'openai',
+      usage: data.usage
+    };
+
+  } catch (error) {
+    console.log('OpenAI error:', error);
+    return null;
+  }
+}
+
 async function tryOpenRouter(message: string, systemPrompt: string) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return null;
@@ -25,7 +78,7 @@ async function tryOpenRouter(message: string, systemPrompt: string) {
             content: message
           }
         ],
-        max_tokens: 500,
+        max_tokens: 1000,
         temperature: 0.7,
         top_p: 0.9
       })
@@ -139,8 +192,13 @@ Guidelines:
 
 ${context ? `Additional context: ${context}` : ''}`;
 
-    // Try OpenRouter first
-    let result = await tryOpenRouter(message, systemPrompt);
+    // Try OpenAI first (ChatGPT)
+    let result = await tryOpenAI(message, systemPrompt);
+
+    // If OpenAI fails, try OpenRouter
+    if (!result) {
+      result = await tryOpenRouter(message, systemPrompt);
+    }
 
     // If OpenRouter fails, try Gemini
     if (!result) {

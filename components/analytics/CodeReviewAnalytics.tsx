@@ -564,47 +564,51 @@ export default function CodeReviewAnalytics({ username, repos }: CodeReviewAnaly
             {/* PR Status Distribution */}
             <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
               <h3 className='text-lg font-semibold mb-4'>PR Status Distribution</h3>
-              <ResponsiveContainer width='100%' height={200}>
-                <PieChart>
-                  <Pie
-                    data={getPRStatusData()}
-                    cx='50%'
-                    cy='50%'
-                    innerRadius={40}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey='value'
-                  >
-                    {getPRStatusData().map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              <div style={{ width: '100%', height: '200px' }}>
+                <ResponsiveContainer width='100%' height='100%'>
+                  <PieChart>
+                    <Pie
+                      data={getPRStatusData()}
+                      cx='50%'
+                      cy='50%'
+                      innerRadius={40}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey='value'
+                    >
+                      {getPRStatusData().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
 
             {/* Issue Status Distribution */}
             <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
               <h3 className='text-lg font-semibold mb-4'>Issue Status Distribution</h3>
-              <ResponsiveContainer width='100%' height={200}>
-                <PieChart>
-                  <Pie
-                    data={getIssueStatusData()}
-                    cx='50%'
-                    cy='50%'
-                    innerRadius={40}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey='value'
-                  >
-                    {getIssueStatusData().map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              <div style={{ width: '100%', height: '200px' }}>
+                <ResponsiveContainer width='100%' height='100%'>
+                  <PieChart>
+                    <Pie
+                      data={getIssueStatusData()}
+                      cx='50%'
+                      cy='50%'
+                      innerRadius={40}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey='value'
+                    >
+                      {getIssueStatusData().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
@@ -635,15 +639,17 @@ export default function CodeReviewAnalytics({ username, repos }: CodeReviewAnaly
         <div className='space-y-6'>
           <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
             <h3 className='text-lg font-semibold mb-4'>PR Activity Trends</h3>
-            <ResponsiveContainer width='100%' height={300}>
-              <LineChart data={getMonthlyActivityData()}>
-                <CartesianGrid strokeDasharray='3 3' />
-                <XAxis dataKey='month' />
-                <YAxis />
-                <Tooltip />
-                <Line type='monotone' dataKey='prs' stroke='#3B82F6' strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
+            <div style={{ width: '100%', height: '300px' }}>
+              <ResponsiveContainer width='100%' height='100%'>
+                <LineChart data={getMonthlyActivityData()}>
+                  <CartesianGrid strokeDasharray='3 3' />
+                  <XAxis dataKey='month' />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type='monotone' dataKey='prs' stroke='#3B82F6' strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4'>
@@ -689,15 +695,17 @@ export default function CodeReviewAnalytics({ username, repos }: CodeReviewAnaly
         <div className='space-y-6'>
           <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
             <h3 className='text-lg font-semibold mb-4'>Issue Resolution Time</h3>
-            <ResponsiveContainer width='100%' height={300}>
-              <BarChart data={getMonthlyActivityData()}>
-                <CartesianGrid strokeDasharray='3 3' />
-                <XAxis dataKey='month' />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey='issues' fill='#F59E0B' />
-              </BarChart>
-            </ResponsiveContainer>
+            <div style={{ width: '100%', height: '300px' }}>
+              <ResponsiveContainer width='100%' height='100%'>
+                <BarChart data={getMonthlyActivityData()}>
+                  <CartesianGrid strokeDasharray='3 3' />
+                  <XAxis dataKey='month' />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey='issues' fill='#F59E0B' />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'>
@@ -726,16 +734,18 @@ export default function CodeReviewAnalytics({ username, repos }: CodeReviewAnaly
         <div className='space-y-6'>
           <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
             <h3 className='text-lg font-semibold mb-4'>Monthly Activity Comparison</h3>
-            <ResponsiveContainer width='100%' height={300}>
-              <LineChart data={getMonthlyActivityData()}>
-                <CartesianGrid strokeDasharray='3 3' />
-                <XAxis dataKey='month' />
-                <YAxis />
-                <Tooltip />
-                <Line type='monotone' dataKey='prs' stroke='#3B82F6' strokeWidth={2} name='PRs' />
-                <Line type='monotone' dataKey='issues' stroke='#F59E0B' strokeWidth={2} name='Issues' />
-              </LineChart>
-            </ResponsiveContainer>
+            <div style={{ width: '100%', height: '300px' }}>
+              <ResponsiveContainer width='100%' height='100%'>
+                <LineChart data={getMonthlyActivityData()}>
+                  <CartesianGrid strokeDasharray='3 3' />
+                  <XAxis dataKey='month' />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type='monotone' dataKey='prs' stroke='#3B82F6' strokeWidth={2} name='PRs' />
+                  <Line type='monotone' dataKey='issues' stroke='#F59E0B' strokeWidth={2} name='Issues' />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4'>

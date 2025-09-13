@@ -6,7 +6,6 @@ import { Analytics } from '@vercel/analytics/next';
 import { ThemeProvider } from '@/lib/ThemeProvider';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import VisitorCounter from '@/components/ui/VisitorCounter';
-import LiveChatWidget from '@/components/ui/LiveChatWidget';
 
 // Font for code and technical elements
 const jetbrainsMono = JetBrains_Mono({
@@ -72,7 +71,6 @@ export default function RootLayout({
           </main>
 
           <VisitorCounter />
-          <LiveChatWidget />
 
           <div className='fixed bottom-2 right-2 sm:bottom-4 sm:right-4'>
             <div className='bg-[var(--primary)] bg-opacity-10 backdrop-blur-sm border border-[var(--primary)] border-opacity-30 rounded-lg px-2 py-1 sm:px-3 sm:py-2 text-xs text-white'>

@@ -6,3 +6,5 @@ export { default as AIPoweredCodeReviewAssistant } from './AIPoweredCodeReviewAs
 export { default as AIAnalysis } from './AIAnalysis';
 export { default as SmartProjectRecommendationEngine } from './SmartProjectRecommendationEngine';
 export { default as ProjectRecommendationEngine } from './ProjectRecommendationEngine';
+export { default as NeuralCodeDreamWeaver } from './NeuralCodeDreamWeaver';
+export { default as AIPortfolioAssistant } from './AIPortfolioAssistant';

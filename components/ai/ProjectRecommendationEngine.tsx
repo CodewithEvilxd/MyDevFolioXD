@@ -42,66 +42,94 @@ export default function ProjectRecommendationEngine({ username, repos, user }: P
 
   useEffect(() => {
     const generateRecommendations = () => {
-      // Mock project recommendations based on user profile
-      const mockRecommendations: ProjectRecommendation[] = [
-        {
-          id: '1',
-          title: 'AI-Powered Code Review Assistant',
-          description: 'Build an intelligent code review tool that uses machine learning to suggest improvements and catch bugs automatically.',
-          difficulty: 'Advanced',
-          estimatedTime: '3-4 months',
-          technologies: ['Python', 'TensorFlow', 'FastAPI', 'React', 'Docker'],
+      if (!repos || repos.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      // Analyze user's real GitHub data
+      const userLanguages = new Set(repos.map(repo => repo.language).filter(Boolean));
+      const userTopics = new Set(repos.flatMap(repo => repo.topics || []));
+      const totalStars = repos.reduce((sum, repo) => sum + repo.stargazers_count, 0);
+      const totalForks = repos.reduce((sum, repo) => sum + repo.forks_count, 0);
+      const avgStarsPerRepo = totalStars / repos.length;
+
+      // Determine experience level
+      let experienceLevel: 'Beginner' | 'Intermediate' | 'Advanced' = 'Beginner';
+      if (avgStarsPerRepo > 50 || totalForks > 20) experienceLevel = 'Intermediate';
+      if (avgStarsPerRepo > 200 || totalForks > 100) experienceLevel = 'Advanced';
+
+      // Generate personalized recommendations based on real data
+      const recommendations: ProjectRecommendation[] = [];
+
+      // AI/ML project if user has relevant background
+      if (userLanguages.has('Python') || userTopics.has('machine-learning') || userTopics.has('ai')) {
+        recommendations.push({
+          id: `${username}-ai-ml-project`,
+          title: `${username}'s AI-Powered Development Tool`,
+          description: `Build an intelligent development tool using your Python and ML expertise (${Array.from(userLanguages).slice(0, 3).join(', ')}) to enhance developer productivity.`,
+          difficulty: experienceLevel === 'Advanced' ? 'Advanced' : 'Intermediate',
+          estimatedTime: experienceLevel === 'Advanced' ? '3-4 months' : '4-5 months',
+          technologies: ['Python', 'TensorFlow/PyTorch', 'FastAPI', 'React', 'Docker'],
           category: 'AI/ML',
-          potentialImpact: 95,
-          matchScore: 88,
+          potentialImpact: 90 + Math.min(totalStars / 10, 10),
+          matchScore: userLanguages.has('Python') ? 85 : 70,
           whyRecommended: [
-            'High demand for AI tools in development',
-            'Leverages your existing Python and React skills',
-            'Great for portfolio and potential startup idea'
+            `Leverages your ${Array.from(userLanguages).join(', ')} expertise`,
+            `${totalStars} stars across your projects show strong technical foundation`,
+            'High demand for AI tools in development workflows'
           ],
           learningOutcomes: [
             'Machine Learning model training and deployment',
             'API design and microservices architecture',
-            'Advanced React patterns and state management'
+            'Advanced patterns in your tech stack'
           ],
           prerequisites: ['Python', 'Basic ML concepts', 'REST APIs']
-        },
-        {
-          id: '2',
-          title: 'Real-time Collaboration Platform',
-          description: 'Create a collaborative coding platform with real-time editing, video calls, and project management features.',
-          difficulty: 'Advanced',
-          estimatedTime: '4-5 months',
+        });
+      }
+
+      // Full-stack project if user has web technologies
+      if (userLanguages.has('JavaScript') || userLanguages.has('TypeScript') || userTopics.has('react')) {
+        recommendations.push({
+          id: `${username}-fullstack-platform`,
+          title: `${username}'s Real-time Collaboration Platform`,
+          description: `Create a collaborative platform using your ${Array.from(userLanguages).join(', ')} skills with ${Array.from(userTopics).slice(0, 3).join(', ')} expertise.`,
+          difficulty: experienceLevel,
+          estimatedTime: experienceLevel === 'Advanced' ? '3-4 months' : '4-5 months',
           technologies: ['Next.js', 'Socket.io', 'WebRTC', 'MongoDB', 'Redis'],
           category: 'Full-Stack',
-          potentialImpact: 90,
-          matchScore: 85,
+          potentialImpact: 85 + Math.min(totalForks / 5, 15),
+          matchScore: userLanguages.has('JavaScript') ? 88 : 75,
           whyRecommended: [
-            'Growing demand for remote collaboration tools',
-            'Showcases full-stack development skills',
-            'Complex real-time features demonstrate expertise'
+            `Showcases your ${Array.from(userLanguages).join(', ')} full-stack capabilities`,
+            `${repos.length} repositories demonstrate broad technical knowledge`,
+            'Growing demand for remote collaboration tools'
           ],
           learningOutcomes: [
             'Real-time communication protocols',
-            'WebRTC and video streaming',
-            'Scalable architecture design'
+            'Scalable architecture design',
+            'Advanced state management'
           ],
           prerequisites: ['JavaScript/TypeScript', 'Node.js', 'Database design']
-        },
-        {
-          id: '3',
-          title: 'Developer Portfolio Analytics Tool',
-          description: 'Build a comprehensive analytics dashboard for developers to track their GitHub activity and portfolio performance.',
-          difficulty: 'Intermediate',
+        });
+      }
+
+      // Data visualization project if user has data-related work
+      if (userTopics.has('data') || userTopics.has('analytics') || userLanguages.has('Python')) {
+        recommendations.push({
+          id: `${username}-data-dashboard`,
+          title: `${username}'s Advanced Analytics Dashboard`,
+          description: `Build a comprehensive analytics dashboard leveraging your data expertise and ${Array.from(userLanguages).join(', ')} skills.`,
+          difficulty: experienceLevel === 'Beginner' ? 'Intermediate' : experienceLevel,
           estimatedTime: '2-3 months',
           technologies: ['React', 'D3.js', 'GitHub API', 'Node.js', 'PostgreSQL'],
           category: 'Data Visualization',
-          potentialImpact: 85,
-          matchScore: 92,
+          potentialImpact: 80 + Math.min(repos.length / 2, 20),
+          matchScore: userTopics.has('data') ? 90 : 75,
           whyRecommended: [
-            'Directly relevant to your current work',
-            'Demonstrates data visualization skills',
-            'Useful tool for the developer community'
+            `Utilizes your ${Array.from(userTopics).filter(t => t.includes('data')).join(', ')} expertise`,
+            `${repos.length} projects show consistent development experience`,
+            'Essential tool for data-driven development'
           ],
           learningOutcomes: [
             'Advanced data visualization techniques',
@@ -109,21 +137,25 @@ export default function ProjectRecommendationEngine({ username, repos, user }: P
             'User experience design for dashboards'
           ],
           prerequisites: ['React', 'JavaScript', 'Basic data structures']
-        },
-        {
-          id: '4',
-          title: 'Blockchain-based Voting System',
-          description: 'Develop a secure, transparent voting system using blockchain technology for elections or organizational decisions.',
+        });
+      }
+
+      // Blockchain project if user shows interest
+      if (userTopics.has('blockchain') || userTopics.has('web3') || userTopics.has('cryptocurrency')) {
+        recommendations.push({
+          id: `${username}-blockchain-app`,
+          title: `${username}'s Decentralized Application`,
+          description: `Develop a blockchain-based application using your ${Array.from(userLanguages).join(', ')} skills and blockchain interest.`,
           difficulty: 'Advanced',
           estimatedTime: '4-6 months',
           technologies: ['Solidity', 'Web3.js', 'React', 'Ethereum', 'IPFS'],
           category: 'Blockchain',
-          potentialImpact: 88,
-          matchScore: 75,
+          potentialImpact: 85 + Math.min(totalStars / 20, 15),
+          matchScore: userTopics.has('blockchain') ? 85 : 65,
           whyRecommended: [
-            'Emerging technology with high growth potential',
-            'Addresses real-world problems',
-            'High learning curve with significant rewards'
+            'Aligns with your blockchain interests',
+            `Builds on your ${Array.from(userLanguages).join(', ')} foundation`,
+            'High-growth technology area'
           ],
           learningOutcomes: [
             'Blockchain fundamentals and smart contracts',
@@ -131,42 +163,206 @@ export default function ProjectRecommendationEngine({ username, repos, user }: P
             'Decentralized application development'
           ],
           prerequisites: ['JavaScript', 'Basic cryptography', 'Web development']
-        },
-        {
-          id: '5',
-          title: 'IoT Home Automation Hub',
-          description: 'Create a central hub for managing smart home devices with voice control, automation rules, and mobile app.',
-          difficulty: 'Intermediate',
+        });
+      }
+
+      // IoT project if user has hardware/backend interest
+      if (userTopics.has('api') || userTopics.has('backend') || userLanguages.has('Python')) {
+        recommendations.push({
+          id: `${username}-iot-platform`,
+          title: `${username}'s IoT Management Platform`,
+          description: `Create an IoT platform using your ${Array.from(userLanguages).join(', ')} and backend expertise.`,
+          difficulty: experienceLevel === 'Beginner' ? 'Intermediate' : experienceLevel,
           estimatedTime: '3-4 months',
-          technologies: ['Raspberry Pi', 'Python', 'MQTT', 'React Native', 'Firebase'],
+          technologies: ['Python', 'MQTT', 'React', 'Docker', 'InfluxDB'],
           category: 'IoT',
-          potentialImpact: 82,
-          matchScore: 78,
+          potentialImpact: 75 + Math.min(totalForks / 10, 25),
+          matchScore: userLanguages.has('Python') ? 80 : 70,
           whyRecommended: [
-            'Growing IoT market with practical applications',
-            'Combines hardware and software skills',
-            'Fun project with immediate tangible results'
+            `Leverages your ${Array.from(userLanguages).join(', ')} backend skills`,
+            `${totalForks} forks show community engagement`,
+            'Growing IoT market with practical applications'
           ],
           learningOutcomes: [
             'IoT protocols and device communication',
-            'Hardware-software integration',
-            'Mobile app development'
+            'Time-series data management',
+            'Scalable backend architecture'
           ],
-          prerequisites: ['Python', 'Basic electronics', 'Mobile development']
-        }
-      ];
+          prerequisites: ['Python', 'Basic electronics', 'Database design']
+        });
+      }
 
-      const mockSkillGaps: SkillGap[] = [
-        { skill: 'Machine Learning', currentLevel: 3, requiredLevel: 7, gap: 4, priority: 'High' },
-        { skill: 'Cloud Architecture', currentLevel: 4, requiredLevel: 8, gap: 4, priority: 'High' },
-        { skill: 'DevOps/CI-CD', currentLevel: 5, requiredLevel: 8, gap: 3, priority: 'Medium' },
-        { skill: 'Mobile Development', currentLevel: 6, requiredLevel: 8, gap: 2, priority: 'Medium' },
-        { skill: 'Blockchain', currentLevel: 2, requiredLevel: 6, gap: 4, priority: 'Low' },
-        { skill: 'UI/UX Design', currentLevel: 4, requiredLevel: 7, gap: 3, priority: 'Medium' }
-      ];
+      // Mobile development project
+      if (userTopics.has('mobile') || userTopics.has('react-native') || userTopics.has('flutter')) {
+        recommendations.push({
+          id: `${username}-mobile-app`,
+          title: `${username}'s Cross-Platform Mobile App`,
+          description: `Build a mobile application using your ${Array.from(userLanguages).join(', ')} skills and mobile development experience.`,
+          difficulty: experienceLevel,
+          estimatedTime: '3-4 months',
+          technologies: ['React Native', 'TypeScript', 'Firebase', 'Redux', 'Node.js'],
+          category: 'Mobile',
+          potentialImpact: 80 + Math.min(repos.length / 3, 20),
+          matchScore: userTopics.has('mobile') ? 85 : 70,
+          whyRecommended: [
+            'Mobile development is in high demand',
+            `Uses your ${Array.from(userLanguages).join(', ')} expertise`,
+            `${repos.length} projects demonstrate development consistency`
+          ],
+          learningOutcomes: [
+            'Cross-platform mobile development',
+            'Mobile UI/UX design',
+            'App store deployment and management'
+          ],
+          prerequisites: ['JavaScript/TypeScript', 'React', 'Basic mobile concepts']
+        });
+      }
 
-      setRecommendations(mockRecommendations);
-      setSkillGaps(mockSkillGaps);
+      // DevOps/CI-CD project
+      if (repos.some(repo => repo.topics?.includes('docker') || repo.topics?.includes('kubernetes'))) {
+        recommendations.push({
+          id: `${username}-devops-platform`,
+          title: `${username}'s DevOps Automation Platform`,
+          description: `Create a DevOps automation platform using your infrastructure and deployment expertise.`,
+          difficulty: 'Advanced',
+          estimatedTime: '4-5 months',
+          technologies: ['Docker', 'Kubernetes', 'Jenkins', 'Terraform', 'AWS/GCP'],
+          category: 'DevOps',
+          potentialImpact: 88 + Math.min(totalStars / 15, 12),
+          matchScore: 80,
+          whyRecommended: [
+            'DevOps skills are critical for modern development',
+            `Builds on your ${Array.from(userTopics).filter(t => t.includes('docker') || t.includes('kubernetes')).join(', ')} experience`,
+            'High demand for DevOps engineers'
+          ],
+          learningOutcomes: [
+            'Infrastructure as Code',
+            'CI/CD pipeline design',
+            'Cloud platform management'
+          ],
+          prerequisites: ['Docker', 'Basic cloud concepts', 'Scripting']
+        });
+      }
+
+      // Ensure we have at least 3 recommendations
+      while (recommendations.length < 3) {
+        const fallbackId = `${username}-general-project-${recommendations.length}`;
+        recommendations.push({
+          id: fallbackId,
+          title: `${username}'s Personal Development Project`,
+          description: `A personalized project leveraging your ${Array.from(userLanguages).slice(0, 3).join(', ')} skills and ${Array.from(userTopics).slice(0, 3).join(', ')} interests.`,
+          difficulty: experienceLevel,
+          estimatedTime: '2-3 months',
+          technologies: Array.from(userLanguages).slice(0, 4),
+          category: 'Personal',
+          potentialImpact: 70 + Math.min(repos.length / 2, 30),
+          matchScore: 75,
+          whyRecommended: [
+            `Tailored to your ${Array.from(userLanguages).join(', ')} expertise`,
+            `${repos.length} repositories show consistent development`,
+            'Opportunity to explore new technologies'
+          ],
+          learningOutcomes: [
+            'Project architecture and design',
+            'Code organization and best practices',
+            'Deployment and maintenance'
+          ],
+          prerequisites: Array.from(userLanguages).slice(0, 2)
+        });
+      }
+
+      // Generate real skill gaps based on user's profile
+      const skillGaps: SkillGap[] = [];
+
+      // Analyze which skills the user might be missing based on their current stack
+      const hasWebSkills = userLanguages.has('JavaScript') || userLanguages.has('TypeScript');
+      const hasBackendSkills = userLanguages.has('Python') || userLanguages.has('Java') || userLanguages.has('Go');
+      const hasMobileSkills = userTopics.has('mobile') || userTopics.has('react-native');
+      const hasCloudSkills = userTopics.has('aws') || userTopics.has('azure') || userTopics.has('gcp');
+      const hasAISkills = userTopics.has('machine-learning') || userTopics.has('ai') || userTopics.has('tensorflow');
+
+      if (!hasAISkills && experienceLevel !== 'Beginner') {
+        skillGaps.push({
+          skill: 'Machine Learning',
+          currentLevel: hasWebSkills ? 2 : 1,
+          requiredLevel: experienceLevel === 'Advanced' ? 8 : 6,
+          gap: experienceLevel === 'Advanced' ? 6 : 5,
+          priority: 'High'
+        });
+      }
+
+      if (!hasCloudSkills) {
+        skillGaps.push({
+          skill: 'Cloud Architecture',
+          currentLevel: hasBackendSkills ? 3 : 1,
+          requiredLevel: 7,
+          gap: hasBackendSkills ? 4 : 6,
+          priority: 'High'
+        });
+      }
+
+      if (!userTopics.has('docker') && !userTopics.has('kubernetes')) {
+        skillGaps.push({
+          skill: 'DevOps/CI-CD',
+          currentLevel: hasBackendSkills ? 4 : 2,
+          requiredLevel: 8,
+          gap: hasBackendSkills ? 4 : 6,
+          priority: 'Medium'
+        });
+      }
+
+      if (!hasMobileSkills && hasWebSkills) {
+        skillGaps.push({
+          skill: 'Mobile Development',
+          currentLevel: hasWebSkills ? 5 : 2,
+          requiredLevel: 8,
+          gap: hasWebSkills ? 3 : 6,
+          priority: 'Medium'
+        });
+      }
+
+      if (!userTopics.has('blockchain') && experienceLevel === 'Advanced') {
+        skillGaps.push({
+          skill: 'Blockchain',
+          currentLevel: 1,
+          requiredLevel: 6,
+          gap: 5,
+          priority: 'Low'
+        });
+      }
+
+      if (!userTopics.has('ui') && !userTopics.has('ux') && hasWebSkills) {
+        skillGaps.push({
+          skill: 'UI/UX Design',
+          currentLevel: hasWebSkills ? 3 : 1,
+          requiredLevel: 7,
+          gap: hasWebSkills ? 4 : 6,
+          priority: 'Medium'
+        });
+      }
+
+      // Ensure we have some skill gaps to show
+      if (skillGaps.length === 0) {
+        skillGaps.push(
+          {
+            skill: 'Advanced Testing',
+            currentLevel: 4,
+            requiredLevel: 8,
+            gap: 4,
+            priority: 'Medium'
+          },
+          {
+            skill: 'Performance Optimization',
+            currentLevel: 5,
+            requiredLevel: 9,
+            gap: 4,
+            priority: 'Medium'
+          }
+        );
+      }
+
+      setRecommendations(recommendations);
+      setSkillGaps(skillGaps);
       setLoading(false);
     };
 
@@ -210,13 +406,21 @@ export default function ProjectRecommendationEngine({ username, repos, user }: P
     }));
   };
 
-  const getCategoryDistribution = () => [
-    { name: 'AI/ML', value: 1, color: '#8B5CF6' },
-    { name: 'Full-Stack', value: 1, color: '#3B82F6' },
-    { name: 'Data Visualization', value: 1, color: '#10B981' },
-    { name: 'Blockchain', value: 1, color: '#F59E0B' },
-    { name: 'IoT', value: 1, color: '#EF4444' }
-  ];
+  const getCategoryDistribution = () => {
+    const categoryCount: { [key: string]: number } = {};
+
+    recommendations.forEach(rec => {
+      categoryCount[rec.category] = (categoryCount[rec.category] || 0) + 1;
+    });
+
+    const colors = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4'];
+
+    return Object.entries(categoryCount).map(([name, value], index) => ({
+      name,
+      value,
+      color: colors[index % colors.length]
+    }));
+  };
 
   if (loading) {
     return (

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Repository } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { callAI } from '@/lib/aiService';
@@ -129,39 +129,60 @@ Format your response as a JSON array of career recommendations:
       });
 
       if (aiResponse.success) {
-        try {
-          const aiCareerPaths = JSON.parse(aiResponse.content);
-          if (Array.isArray(aiCareerPaths) && aiCareerPaths.length > 0) {
-            setCareerPaths(aiCareerPaths);
+        console.log('AI Career Path response received, length:', aiResponse.content.length);
 
-            // Calculate skill gaps
-            const topPath = aiCareerPaths[0];
-            const gaps: SkillGap[] = topPath.skills
-              .filter((skill: string) => !userSkills.some(userSkill =>
-                userSkill.toLowerCase().includes(skill.toLowerCase().split(' ')[0])
-              ))
-              .map((skill: string) => ({
-                skill,
-                current_level: 0,
-                required_level: 3,
-                time_to_learn: skill.includes('React') || skill.includes('TypeScript') ? '2-3 months' :
-                              skill.includes('Node') || skill.includes('Python') ? '3-4 months' :
-                              skill.includes('Docker') || skill.includes('AWS') ? '1-2 months' : '4-6 months',
-                resources: [
-                  `Official ${skill} documentation`,
-                  `${skill} courses on Udemy/Pluralsight`,
-                  `${skill} projects on GitHub`,
-                  `Join ${skill} communities on Reddit/Discord`
-                ]
-              }));
+        // Validate that the response looks like JSON
+        const content = aiResponse.content.trim();
+        if (!content.startsWith('[') && !content.startsWith('{')) {
+          console.warn('AI response does not appear to be JSON, using fallback. Response starts with:', content.substring(0, 100));
+        } else {
+          try {
+            const aiCareerPaths = JSON.parse(content);
+            console.log('Successfully parsed AI career paths:', aiCareerPaths.length);
 
-            setSkillGaps(gaps);
-            setIsAnalyzing(false);
-            return;
+            if (Array.isArray(aiCareerPaths) && aiCareerPaths.length > 0) {
+              // Validate the structure of the first career path
+              const firstPath = aiCareerPaths[0];
+              if (firstPath.title && firstPath.description && firstPath.skills && firstPath.salary) {
+                setCareerPaths(aiCareerPaths);
+
+                // Calculate skill gaps
+                const topPath = aiCareerPaths[0];
+                const gaps: SkillGap[] = topPath.skills
+                  .filter((skill: string) => !userSkills.some(userSkill =>
+                    userSkill.toLowerCase().includes(skill.toLowerCase().split(' ')[0])
+                  ))
+                  .map((skill: string) => ({
+                    skill,
+                    current_level: 0,
+                    required_level: 3,
+                    time_to_learn: skill.includes('React') || skill.includes('TypeScript') ? '2-3 months' :
+                                  skill.includes('Node') || skill.includes('Python') ? '3-4 months' :
+                                  skill.includes('Docker') || skill.includes('AWS') ? '1-2 months' : '4-6 months',
+                    resources: [
+                      `Official ${skill} documentation`,
+                      `${skill} courses on Udemy/Pluralsight`,
+                      `${skill} projects on GitHub`,
+                      `Join ${skill} communities on Reddit/Discord`
+                    ]
+                  }));
+
+                setSkillGaps(gaps);
+                setIsAnalyzing(false);
+                return;
+              } else {
+                console.warn('AI response structure is invalid, missing required fields');
+              }
+            } else {
+              console.warn('AI response is not a valid array or is empty');
+            }
+          } catch (parseError) {
+            console.warn('AI response parsing failed, using fallback. Error:', parseError);
+            console.warn('Raw AI response:', content.substring(0, 500));
           }
-        } catch (parseError) {
-          console.warn('AI response parsing failed, using fallback:', parseError);
         }
+      } else {
+        console.warn('AI response was not successful:', aiResponse.error);
       }
     } catch (error) {
       console.error('Error analyzing career paths:', error);

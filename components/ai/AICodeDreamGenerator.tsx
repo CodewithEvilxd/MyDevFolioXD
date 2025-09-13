@@ -82,31 +82,53 @@ export default function AICodeDreamGenerator({ username, repos }: AICodeDreamGen
       const aiResponse = await generateDreamProjects(codingStyle, repos.slice(0, 5));
 
       if (aiResponse.success) {
-        try {
-          const dreams = JSON.parse(aiResponse.content);
-          if (Array.isArray(dreams)) {
-            setDreamProjects(dreams.map(dream => ({
-              id: dream.title.toLowerCase().replace(/\s+/g, '-'),
-              title: dream.title,
-              description: dream.description,
-              technologies: dream.technologies || [],
-              complexity: dream.complexity || 'Intermediate',
-              estimatedTime: dream.estimatedTime || '2-3 months',
-              whyItFits: dream.whyItFits || 'Perfect match for your skills',
-              codeSnippet: dream.codeSnippet || '// Sample code',
-              innovation: dream.innovation || 'Innovative approach'
-            })));
-          } else {
-            // Fallback to pattern-based generation if AI returns invalid format
+        console.log('AI Dream Generator response received, length:', aiResponse.content.length);
+
+        // Validate that the response looks like JSON
+        const content = aiResponse.content.trim();
+        if (!content.startsWith('[') && !content.startsWith('{')) {
+          console.warn('AI dream response does not appear to be JSON, using fallback. Response starts with:', content.substring(0, 100));
+          const dreams = await generateFallbackProjects(codingStyle);
+          setDreamProjects(dreams);
+        } else {
+          try {
+            const dreams = JSON.parse(content);
+            console.log('Successfully parsed AI dream projects:', dreams.length);
+
+            if (Array.isArray(dreams) && dreams.length > 0) {
+              // Validate the structure of the first dream
+              const firstDream = dreams[0];
+              if (firstDream.title && firstDream.description) {
+                setDreamProjects(dreams.map(dream => ({
+                  id: dream.title.toLowerCase().replace(/\s+/g, '-'),
+                  title: dream.title,
+                  description: dream.description,
+                  technologies: dream.technologies || [],
+                  complexity: dream.complexity || 'Intermediate',
+                  estimatedTime: dream.estimatedTime || '2-3 months',
+                  whyItFits: dream.whyItFits || 'Perfect match for your skills',
+                  codeSnippet: dream.codeSnippet || '// Sample code',
+                  innovation: dream.innovation || 'Innovative approach'
+                })));
+              } else {
+                console.warn('AI dream response structure is invalid, using fallback');
+                const dreams = await generateFallbackProjects(codingStyle);
+                setDreamProjects(dreams);
+              }
+            } else {
+              console.warn('AI dream response is not a valid array or is empty, using fallback');
+              const dreams = await generateFallbackProjects(codingStyle);
+              setDreamProjects(dreams);
+            }
+          } catch (parseError) {
+            console.warn('AI dream response parsing failed, using fallback. Error:', parseError);
+            console.warn('Raw AI dream response:', content.substring(0, 500));
             const dreams = await generateFallbackProjects(codingStyle);
             setDreamProjects(dreams);
           }
-        } catch (parseError) {
-          // Fallback to pattern-based generation if JSON parsing fails
-          const dreams = await generateFallbackProjects(codingStyle);
-          setDreamProjects(dreams);
         }
       } else {
+        console.warn('AI dream response was not successful:', aiResponse.error);
         // Fallback to pattern-based generation if AI fails
         const dreams = await generateFallbackProjects(codingStyle);
         setDreamProjects(dreams);
@@ -129,190 +151,256 @@ export default function AICodeDreamGenerator({ username, repos }: AICodeDreamGen
   const generateFallbackProjects = async (style: CodingStyle): Promise<DreamProject[]> => {
     const dreams: DreamProject[] = [];
 
-    // Generate projects based on patterns
+    // Get user's primary language and technologies from real data
+    const primaryLanguage = style.languages[0] || 'JavaScript';
+    const userTopics = style.topics.slice(0, 5);
+    const userLanguages = style.languages;
+
+    // Generate projects based on user's real coding patterns and technologies
     if (style.patterns.includes('fullstack-developer')) {
       dreams.push({
-        id: 'neural-canvas',
-        title: 'Neural Canvas',
-        description: 'An AI-powered drawing application that learns your artistic style and generates collaborative artwork with other users in real-time.',
-        technologies: ['React', 'Node.js', 'TensorFlow.js', 'WebRTC', 'MongoDB'],
-        complexity: 'Advanced',
+        id: `${username}-fullstack-ai-app`,
+        title: `${username}'s AI-Powered ${primaryLanguage} Application`,
+        description: `A full-stack application built with your preferred technologies (${userLanguages.join(', ')}) that leverages AI to enhance user experience and automate common tasks.`,
+        technologies: [...userLanguages, 'Node.js', 'AI/ML', 'Database'],
+        complexity: userLanguages.length > 2 ? 'Advanced' : 'Intermediate',
         estimatedTime: '3-4 months',
-        whyItFits: 'Combines your fullstack skills with AI/ML interest, creating a unique collaborative platform.',
-        codeSnippet: `// Neural style transfer in real-time
-const applyStyleTransfer = async (canvas, styleImage) => {
-  const model = await tf.loadGraphModel('/models/style-transfer/model.json');
-  const tensor = tf.browser.fromPixels(canvas);
-  const styleTensor = tf.browser.fromPixels(styleImage);
-
-  const result = model.predict([tensor, styleTensor]);
-  return await tf.browser.toPixels(result);
+        whyItFits: `Built specifically for your ${primaryLanguage} and ${userLanguages.slice(1).join(', ')} stack with ${userTopics.length} specialized topics.`,
+        codeSnippet: `// AI-enhanced ${primaryLanguage} application
+const AIApp = {
+  async processUserData(data) {
+    // Use your ${userTopics.join(', ')} expertise
+    const analysis = await analyzeWithAI(data, {
+      technologies: ${JSON.stringify(userLanguages)},
+      topics: ${JSON.stringify(userTopics)}
+    });
+    return analysis;
+  }
 };`,
-        innovation: 'Real-time collaborative AI art generation with WebRTC'
+        innovation: `AI integration with your ${primaryLanguage} expertise and ${userTopics.join(', ')} specializations`
       });
     }
 
     if (style.patterns.includes('ai-ml-engineer')) {
       dreams.push({
-        id: 'quantum-debugger',
-        title: 'Quantum Code Debugger',
-        description: 'A debugging tool that uses quantum computing principles to explore multiple code execution paths simultaneously.',
-        technologies: ['Python', 'Qiskit', 'FastAPI', 'React', 'D3.js'],
+        id: `${username}-ml-automation`,
+        title: `${username}'s ML Automation Platform`,
+        description: `An automation platform that uses your Python and machine learning expertise to create intelligent workflows for data processing and decision making.`,
+        technologies: ['Python', 'TensorFlow/PyTorch', 'FastAPI', 'Docker', 'PostgreSQL'],
         complexity: 'Expert',
-        estimatedTime: '6 months',
-        whyItFits: 'Leverages your ML expertise with cutting-edge quantum computing concepts.',
-        codeSnippet: `from qiskit import QuantumCircuit, Aer, execute
+        estimatedTime: '5-6 months',
+        whyItFits: `Leverages your Python expertise and ${userTopics.filter(t => t.includes('ml') || t.includes('ai')).join(', ')} background.`,
+        codeSnippet: `from sklearn.ensemble import RandomForestClassifier
+from fastapi import FastAPI
 
-def quantum_debug(code_snippet):
-    """Debug code by exploring multiple execution paths"""
-    qc = QuantumCircuit(4, 4)
+class MLAutomationPlatform:
+    def __init__(self):
+        self.models = {}
+        self.app = FastAPI()
 
-    # Create superposition of possible code paths
-    qc.h([0, 1, 2, 3])
+    def train_model(self, data, target):
+        # Your ML expertise in action
+        model = RandomForestClassifier(n_estimators=100)
+        model.fit(data, target)
+        return model
 
-    # Apply quantum gates based on code logic
-    qc.cx(0, 3)  # Conditional execution
-    qc.measure_all()
-
-    # Execute on quantum simulator
-    backend = Aer.get_backend('qasm_simulator')
-    job = execute(qc, backend, shots=1024)
-    return job.result().get_counts()`,
-        innovation: 'Quantum algorithms for debugging classical code'
+    def predict(self, model_name, input_data):
+        model = self.models[model_name]
+        return model.predict_proba(input_data)`,
+        innovation: 'Automated ML pipelines with your specialized algorithms'
       });
     }
 
     if (style.patterns.includes('frontend-specialist')) {
       dreams.push({
-        id: 'holographic-ui',
-        title: 'Holographic UI Framework',
-        description: 'A CSS framework that creates 3D holographic effects for web interfaces, with physics-based interactions.',
-        technologies: ['CSS', 'JavaScript', 'WebGL', 'Three.js', 'React'],
+        id: `${username}-interactive-dashboard`,
+        title: `${username}'s Interactive Data Dashboard`,
+        description: `A sophisticated dashboard built with your frontend expertise (${userLanguages.join(', ')}) that visualizes complex data with interactive charts and real-time updates.`,
+        technologies: [...userLanguages, 'D3.js', 'WebSocket', 'Node.js'],
         complexity: 'Advanced',
         estimatedTime: '2-3 months',
-        whyItFits: 'Extends your frontend expertise into cutting-edge 3D web experiences.',
-        codeSnippet: `// Holographic button with physics
-.holographic-button {
-  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-  border: none;
-  border-radius: 10px;
-  padding: 15px 30px;
-  position: relative;
-  overflow: hidden;
-}
+        whyItFits: `Showcases your ${primaryLanguage} frontend skills with ${userTopics.join(', ')} visualizations.`,
+        codeSnippet: `// Interactive dashboard with your tech stack
+class InteractiveDashboard extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      data: [],
+      technologies: ${JSON.stringify(userLanguages)}
+    };
+  }
 
-.holographic-button::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.3), transparent);
-  animation: rotate 3s linear infinite;
+  async fetchData() {
+    // Real-time data visualization
+    const response = await fetch('/api/data');
+    const data = await response.json();
+    this.setState({ data });
+  }
+
+  render() {
+    return (
+      <div className="dashboard">
+        {/* Your ${userTopics.join(', ')} visualization expertise */}
+      </div>
+    );
+  }
 }`,
-        innovation: 'Physics-based holographic UI components'
+        innovation: `Real-time data visualization with your ${primaryLanguage} and ${userTopics.join(', ')} expertise`
       });
     }
 
     if (style.patterns.includes('open-source-contributor')) {
       dreams.push({
-        id: 'code-time-machine',
-        title: 'Code Time Machine',
-        description: 'A tool that lets developers time-travel through their codebase history, seeing how code evolved and predicting future changes.',
-        technologies: ['TypeScript', 'Git', 'D3.js', 'Node.js', 'React'],
-        complexity: 'Advanced',
-        estimatedTime: '4 months',
-        whyItFits: 'Perfect for your open source contributions, helping others understand code evolution.',
-        codeSnippet: `// Time-travel through git history
-class TimeMachine {
-  constructor(repoPath) {
-    this.repo = git(repoPath);
-  }
-
-  async travelTo(date) {
-    const commits = await this.repo.log({
-      since: date,
-      until: new Date()
-    });
-
-    return commits.all.map(commit => ({
-      hash: commit.hash,
-      date: commit.date,
-      message: commit.message,
-      diff: await this.getDiff(commit.hash)
+        id: `${username}-oss-toolkit`,
+        title: `${username}'s Open Source Developer Toolkit`,
+        description: `A comprehensive toolkit for open source contributors featuring your ${primaryLanguage} utilities, automation scripts, and contribution tracking tools.`,
+        technologies: [...userLanguages, 'Git', 'GitHub API', 'CLI'],
+        complexity: 'Intermediate',
+        estimatedTime: '3 months',
+        whyItFits: `Built for your open source contribution style with ${userTopics.length} specialized areas.`,
+        codeSnippet: `#!/usr/bin/env ${primaryLanguage.toLowerCase()}
+// Open source contribution toolkit
+const OSSToolkit = {
+  async analyzeContributions(username) {
+    const repos = await fetchGitHubRepos(username);
+    return repos.map(repo => ({
+      name: repo.name,
+      contributions: repo.contributions,
+      technologies: ${JSON.stringify(userLanguages)},
+      topics: ${JSON.stringify(userTopics)}
     }));
-  }
+  },
 
-  predictFutureChanges(currentCode) {
-    // ML model to predict code changes
-    return this.mlModel.predict(currentCode);
+  generateContributionReport(repos) {
+    // Your analysis expertise
+    return repos.reduce((report, repo) => {
+      report.totalContributions += repo.contributions;
+      return report;
+    }, { totalContributions: 0 });
   }
-}`,
-        innovation: 'Temporal navigation through code history with ML predictions'
+};`,
+        innovation: `Automated open source contribution analysis with your ${primaryLanguage} tooling`
       });
     }
 
-    // Add some universal dream projects
-    dreams.push({
-      id: 'conscious-code',
-      title: 'Conscious Code Editor',
-      description: 'An AI editor that becomes conscious of your coding patterns and suggests improvements before you make mistakes.',
-      technologies: ['TypeScript', 'TensorFlow.js', 'Monaco Editor', 'Node.js'],
-      complexity: 'Expert',
-      estimatedTime: '5 months',
-      whyItFits: 'Advanced AI integration with your existing development workflow.',
-      codeSnippet: `// Conscious code analysis
-class ConsciousEditor {
-  constructor() {
-    this.brain = new NeuralNetwork();
-    this.memory = new CodeMemory();
+    // Generate personalized projects based on user's actual technologies and topics
+    if (userLanguages.includes('TypeScript') || userLanguages.includes('JavaScript')) {
+      dreams.push({
+        id: `${username}-web-framework`,
+        title: `${username}'s Custom Web Framework`,
+        description: `A lightweight web framework built with your ${primaryLanguage} expertise, optimized for ${userTopics.slice(0, 3).join(', ')} applications.`,
+        technologies: [...userLanguages, 'NPM', 'Webpack', 'Testing'],
+        complexity: userLanguages.length > 3 ? 'Advanced' : 'Intermediate',
+        estimatedTime: '4 months',
+        whyItFits: `Custom framework tailored to your ${userLanguages.join(', ')} stack and ${userTopics.join(', ')} interests.`,
+        codeSnippet: `// Custom ${primaryLanguage} web framework
+class ${username}Framework {
+  constructor(config) {
+    this.config = config;
+    this.routes = new Map();
+    this.middlewares = [];
   }
 
-  async analyzeCode(code, user) {
-    const patterns = await this.memory.recall(user);
-    const prediction = this.brain.predict(code, patterns);
+  route(path, handler) {
+    this.routes.set(path, handler);
+  }
 
-    if (prediction.error_probability > 0.7) {
-      return {
-        suggestion: 'Potential bug detected',
-        confidence: prediction.error_probability,
-        fix: this.generateFix(code, prediction)
-      };
+  use(middleware) {
+    this.middlewares.push(middleware);
+  }
+
+  async handle(request) {
+    // Your framework logic with ${userTopics.join(', ')} optimizations
+    for (const middleware of this.middlewares) {
+      await middleware(request);
+    }
+
+    const handler = this.routes.get(request.path);
+    if (handler) {
+      return await handler(request);
     }
   }
 }`,
-      innovation: 'AI that prevents bugs before they happen'
+        innovation: `Custom framework with ${userTopics.join(', ')} optimizations for your development style`
+      });
+    }
+
+    if (userTopics.some(topic => topic.includes('api') || topic.includes('backend'))) {
+      dreams.push({
+        id: `${username}-api-platform`,
+        title: `${username}'s API Development Platform`,
+        description: `A robust API platform built with your backend expertise, featuring automatic documentation, testing, and deployment capabilities.`,
+        technologies: [...userLanguages, 'REST', 'GraphQL', 'Docker', 'Testing'],
+        complexity: 'Advanced',
+        estimatedTime: '4-5 months',
+        whyItFits: `API platform designed around your ${primaryLanguage} backend patterns and ${userTopics.filter(t => t.includes('api')).join(', ')} experience.`,
+        codeSnippet: `// API platform with your expertise
+const APIPlatform = {
+  endpoints: new Map(),
+
+  registerEndpoint(path, config) {
+    this.endpoints.set(path, {
+      ...config,
+      technologies: ${JSON.stringify(userLanguages)},
+      topics: ${JSON.stringify(userTopics)}
     });
+  },
 
-    dreams.push({
-      id: 'multiverse-deployer',
-      title: 'Multiverse Deployer',
-      description: 'Deploy your application to multiple cloud platforms simultaneously, with automatic optimization for each environment.',
-      technologies: ['Go', 'Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure'],
-      complexity: 'Advanced',
-      estimatedTime: '4 months',
-      whyItFits: 'Scales your deployment skills across multiple cloud platforms.',
-      codeSnippet: `// Multi-cloud deployment
-type MultiverseDeployer struct {
-  clouds []CloudProvider
-  optimizer DeploymentOptimizer
-}
+  async handleRequest(path, request) {
+    const endpoint = this.endpoints.get(path);
+    if (!endpoint) {
+      throw new Error('Endpoint not found');
+    }
 
-func (md *MultiverseDeployer) Deploy(app *Application) error {
-  deployments := make([]*Deployment, len(md.clouds))
+    // Your API handling logic
+    return await endpoint.handler(request);
+  },
 
-  for i, cloud := range md.clouds {
-    // Optimize for each cloud's strengths
-    optimized := md.optimizer.Optimize(app, cloud.Capabilities())
-    deployments[i] = cloud.Deploy(optimized)
+  generateDocs() {
+    // Auto-generate documentation
+    return Array.from(this.endpoints.entries()).map(([path, config]) => ({
+      path,
+      methods: config.methods,
+      description: config.description
+    }));
   }
+};`,
+        innovation: `Intelligent API platform with your ${userTopics.join(', ')} domain expertise`
+      });
+    }
 
-  // Return the best performing deployment
-  return md.selectBestDeployment(deployments)
-}`,
-      innovation: 'Simultaneous multi-cloud deployment with AI optimization'
-    });
+    // Ensure we always have at least 3 projects
+    while (dreams.length < 3) {
+      dreams.push({
+        id: `${username}-personal-project-${dreams.length}`,
+        title: `${username}'s ${primaryLanguage} Innovation Project`,
+        description: `An innovative project leveraging your ${primaryLanguage} skills and ${userTopics.slice(0, 3).join(', ')} expertise to solve real-world problems.`,
+        technologies: [...userLanguages, 'Modern Tools'],
+        complexity: 'Intermediate',
+        estimatedTime: '2-3 months',
+        whyItFits: `Personalized project based on your ${userLanguages.join(', ')} proficiency and ${userTopics.join(', ')} interests.`,
+        codeSnippet: `// Your personalized ${primaryLanguage} project
+const ${username}Project = {
+  technologies: ${JSON.stringify(userLanguages)},
+  topics: ${JSON.stringify(userTopics)},
+
+  async initialize() {
+    console.log('Initializing with your tech stack...');
+    // Project initialization with your preferences
+  },
+
+  async execute() {
+    // Main project logic using your expertise
+    return {
+      success: true,
+      technologies: this.technologies,
+      topics: this.topics
+    };
+  }
+};`,
+        innovation: `Personalized innovation using your ${primaryLanguage} and ${userTopics.join(', ')} expertise`
+      });
+    }
 
     return dreams;
   };

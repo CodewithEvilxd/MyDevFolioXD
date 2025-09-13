@@ -20,12 +20,17 @@ interface AIResponse {
  */
 async function callOpenRouter(request: AIRequest): Promise<AIResponse> {
   try {
+    const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+    if (!apiKey) {
+      throw new Error('OpenRouter API key not configured');
+    }
+
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENROUTER_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': window.location.origin,
+        'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : '',
         'X-Title': 'GitHubFolioXD'
       },
       body: JSON.stringify({
@@ -37,13 +42,25 @@ async function callOpenRouter(request: AIRequest): Promise<AIResponse> {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenRouter API error: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+
+    // Validate response structure
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Invalid response structure from OpenRouter API');
+    }
+
+    const content = data.choices[0].message.content;
+    if (!content || typeof content !== 'string') {
+      throw new Error('No content received from OpenRouter API');
+    }
+
     return {
       success: true,
-      content: data.choices[0]?.message?.content || '',
+      content: content.trim(),
       apiUsed: 'openrouter'
     };
   } catch (error) {
@@ -61,7 +78,12 @@ async function callOpenRouter(request: AIRequest): Promise<AIResponse> {
  */
 async function callGemini(request: AIRequest): Promise<AIResponse> {
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_API_KEY}`, {
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('Gemini API key not configured');
+    }
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -80,13 +102,25 @@ async function callGemini(request: AIRequest): Promise<AIResponse> {
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+
+    // Validate response structure
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+      throw new Error('Invalid response structure from Gemini API');
+    }
+
+    const content = data.candidates[0].content.parts[0].text;
+    if (!content || typeof content !== 'string') {
+      throw new Error('No content received from Gemini API');
+    }
+
     return {
       success: true,
-      content: data.candidates[0]?.content?.parts[0]?.text || '',
+      content: content.trim(),
       apiUsed: 'gemini'
     };
   } catch (error) {
@@ -109,7 +143,6 @@ export async function callAI(request: AIRequest): Promise<AIResponse> {
     if (openRouterResponse.success) {
       return openRouterResponse;
     }
-    console.warn('OpenRouter API failed, trying Gemini:', openRouterResponse.error);
   }
 
   // Fallback to Gemini
@@ -118,14 +151,13 @@ export async function callAI(request: AIRequest): Promise<AIResponse> {
     if (geminiResponse.success) {
       return geminiResponse;
     }
-    console.warn('Gemini API failed:', geminiResponse.error);
   }
 
   // Both APIs failed
   return {
     success: false,
     content: '',
-    error: 'All AI APIs failed',
+    error: 'All AI APIs failed - check API keys and network connection',
     apiUsed: 'none'
   };
 }

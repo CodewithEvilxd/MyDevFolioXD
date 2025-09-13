@@ -86,31 +86,51 @@ export default function AIPoweredCodeReviewAssistant({ username, repos }: AIPowe
       let issues: CodeReviewIssue[] = [];
 
       if (aiResponse.success) {
-        try {
-          const aiIssues = JSON.parse(aiResponse.content);
-          if (Array.isArray(aiIssues)) {
-            issues = aiIssues.map((issue: any, index: number) => ({
-              id: `${repo.id}-ai-${index}`,
-              type: issue.type || 'best-practice',
-              severity: issue.severity || 'medium',
-              title: issue.title || 'Code Quality Issue',
-              description: issue.description || 'AI detected an issue',
-              file: issue.file || 'unknown',
-              line: issue.line,
-              suggestion: issue.suggestion || 'Review and improve',
-              codeSnippet: issue.codeSnippet,
-              impact: issue.impact || 'Improves code quality',
-              confidence: issue.confidence || 0.5
-            }));
-          } else {
-            // Fallback to pattern-based issues if AI returns invalid format
+        console.log('AI Code Review response received, length:', aiResponse.content.length);
+
+        // Validate that the response looks like JSON
+        const content = aiResponse.content.trim();
+        if (!content.startsWith('[') && !content.startsWith('{')) {
+          console.warn('AI code review response does not appear to be JSON, using fallback. Response starts with:', content.substring(0, 100));
+          issues = generateCodeReviewIssues(repo);
+        } else {
+          try {
+            const aiIssues = JSON.parse(content);
+            console.log('Successfully parsed AI code review issues:', aiIssues.length);
+
+            if (Array.isArray(aiIssues) && aiIssues.length > 0) {
+              // Validate the structure of the first issue
+              const firstIssue = aiIssues[0];
+              if (firstIssue.title && firstIssue.description) {
+                issues = aiIssues.map((issue: any, index: number) => ({
+                  id: `${repo.id}-ai-${index}`,
+                  type: issue.type || 'best-practice',
+                  severity: issue.severity || 'medium',
+                  title: issue.title || 'Code Quality Issue',
+                  description: issue.description || 'AI detected an issue',
+                  file: issue.file || 'unknown',
+                  line: issue.line,
+                  suggestion: issue.suggestion || 'Review and improve',
+                  codeSnippet: issue.codeSnippet,
+                  impact: issue.impact || 'Improves code quality',
+                  confidence: issue.confidence || 0.5
+                }));
+              } else {
+                console.warn('AI code review response structure is invalid, using fallback');
+                issues = generateCodeReviewIssues(repo);
+              }
+            } else {
+              console.warn('AI code review response is not a valid array or is empty, using fallback');
+              issues = generateCodeReviewIssues(repo);
+            }
+          } catch (parseError) {
+            console.warn('AI code review response parsing failed, using fallback. Error:', parseError);
+            console.warn('Raw AI code review response:', content.substring(0, 500));
             issues = generateCodeReviewIssues(repo);
           }
-        } catch (parseError) {
-          // Fallback to pattern-based issues if JSON parsing fails
-          issues = generateCodeReviewIssues(repo);
         }
       } else {
+        console.warn('AI code review response was not successful:', aiResponse.error);
         // Fallback to pattern-based issues if AI fails
         issues = generateCodeReviewIssues(repo);
       }
@@ -160,101 +180,194 @@ export default function AIPoweredCodeReviewAssistant({ username, repos }: AIPowe
 
   const generateCodeReviewIssues = (repo: Repository): CodeReviewIssue[] => {
     const issues: CodeReviewIssue[] = [];
-    const files = ['src/main.js', 'components/App.tsx', 'utils/helpers.js', 'api/routes.js', 'config/database.js'];
 
-    // Security issues
-    if (Math.random() > 0.7) {
+    // Analyze repository properties for realistic issues
+    const language = repo.language || 'Unknown';
+    const topics = repo.topics || [];
+    const description = repo.description || '';
+    const stars = repo.stargazers_count || 0;
+    const forks = repo.forks_count || 0;
+    const issues_count = repo.open_issues_count || 0;
+
+    // Generate file names based on repository language and topics
+    const getFileNames = () => {
+      const files = [];
+      if (language === 'JavaScript' || language === 'TypeScript') {
+        files.push('src/index.js', 'components/App.tsx', 'utils/helpers.js', 'api/routes.js');
+      } else if (language === 'Python') {
+        files.push('main.py', 'utils/helpers.py', 'api/routes.py', 'models/user.py');
+      } else if (language === 'Java') {
+        files.push('src/main/java/App.java', 'src/main/java/UserService.java', 'src/main/java/UserController.java');
+      } else {
+        files.push('src/main.js', 'lib/utils.js', 'api/handler.js');
+      }
+      return files;
+    };
+
+    const files = getFileNames();
+
+    // Security issues based on repository characteristics
+    if (topics.includes('api') || topics.includes('backend') || description.toLowerCase().includes('api')) {
       issues.push({
         id: `security-${repo.id}-1`,
         type: 'security',
+        severity: stars > 100 ? 'high' : 'medium',
+        title: 'API Authentication Check',
+        description: `Repository handles API operations - ensure proper authentication is implemented`,
+        file: files.find(f => f.includes('api')) || files[0],
+        line: Math.floor(Math.random() * 100) + 1,
+        suggestion: 'Implement JWT or OAuth authentication for API endpoints',
+        codeSnippet: `// Check for authentication middleware
+app.use('/api', authenticateToken);`,
+        impact: 'Prevents unauthorized access to sensitive data',
+        confidence: 0.85
+      });
+    }
+
+    if (topics.includes('database') || description.toLowerCase().includes('database')) {
+      issues.push({
+        id: `security-${repo.id}-2`,
+        type: 'security',
         severity: 'critical',
-        title: 'Potential SQL Injection Vulnerability',
-        description: 'Direct string concatenation in SQL query detected',
-        file: 'api/routes.js',
-        line: 45,
-        suggestion: 'Use parameterized queries or prepared statements',
-        codeSnippet: `const query = "SELECT * FROM users WHERE id = " + userId;`,
-        impact: 'High risk of data breach and unauthorized access',
+        title: 'Database Query Security',
+        description: 'Database operations detected - ensure SQL injection protection',
+        file: files.find(f => f.includes('model') || f.includes('db')) || files[1],
+        line: Math.floor(Math.random() * 50) + 20,
+        suggestion: 'Use parameterized queries or ORM to prevent SQL injection',
+        codeSnippet: `// Instead of string concatenation
+const query = "SELECT * FROM users WHERE id = " + userId;
+
+// Use parameterized queries
+const query = "SELECT * FROM users WHERE id = ?";
+const result = db.query(query, [userId]);`,
+        impact: 'Critical security vulnerability if not addressed',
         confidence: 0.95
       });
     }
 
-    if (Math.random() > 0.6) {
-      issues.push({
-        id: `security-${repo.id}-2`,
-        type: 'security',
-        severity: 'high',
-        title: 'Insecure Direct Object Reference',
-        description: 'User can access resources they shouldn\'t have access to',
-        file: 'api/user.js',
-        line: 23,
-        suggestion: 'Implement proper authorization checks',
-        impact: 'Users can access sensitive data of other users',
-        confidence: 0.88
-      });
-    }
-
-    // Performance issues
-    if (Math.random() > 0.5) {
+    // Performance issues based on repository size and activity
+    if (repo.size > 100000) { // Large repository
       issues.push({
         id: `performance-${repo.id}-1`,
         type: 'performance',
         severity: 'medium',
-        title: 'Inefficient Array Operations',
-        description: 'Multiple array iterations can be optimized',
-        file: 'utils/dataProcessor.js',
-        line: 67,
-        suggestion: 'Use array methods like map(), filter(), and reduce()',
-        codeSnippet: `for (let i = 0; i < arr.length; i++) {\n  for (let j = 0; j < arr.length; j++) {\n    // O(n²) complexity\n  }\n}`,
-        impact: 'Poor performance with large datasets',
-        confidence: 0.82
+        title: 'Large Repository Size',
+        description: `Repository size is ${repo.size}KB - consider code splitting and optimization`,
+        file: 'package.json',
+        line: 1,
+        suggestion: 'Implement code splitting, tree shaking, and bundle optimization',
+        impact: 'Improved load times and better user experience',
+        confidence: 0.80
       });
     }
 
-    // Maintainability issues
-    issues.push({
-      id: `maintainability-${repo.id}-1`,
-      type: 'maintainability',
-      severity: 'medium',
-      title: 'Long Function Detected',
-      description: 'Function exceeds recommended length limit',
-      file: 'components/Dashboard.tsx',
-      line: 12,
-      suggestion: 'Break down into smaller, focused functions',
-      impact: 'Harder to test and maintain',
-      confidence: 0.75
-    });
+    if (issues_count > 10) {
+      issues.push({
+        id: `maintainability-${repo.id}-1`,
+        type: 'maintainability',
+        severity: 'medium',
+        title: 'High Issue Count',
+        description: `${issues_count} open issues detected - consider improving issue management`,
+        file: 'README.md',
+        line: 1,
+        suggestion: 'Regularly review and close resolved issues, improve documentation',
+        impact: 'Better project maintainability and contributor experience',
+        confidence: 0.75
+      });
+    }
 
-    // Best practice issues
-    if (Math.random() > 0.4) {
+    // Language-specific issues
+    if (language === 'JavaScript' && !topics.includes('typescript')) {
       issues.push({
         id: `best-practice-${repo.id}-1`,
         type: 'best-practice',
         severity: 'low',
-        title: 'Missing Error Handling',
-        description: 'Async operation without proper error handling',
-        file: 'services/api.js',
-        line: 89,
-        suggestion: 'Add try-catch blocks for async operations',
-        impact: 'Application may crash on network errors',
+        title: 'TypeScript Migration Opportunity',
+        description: 'Consider migrating to TypeScript for better type safety',
+        file: 'package.json',
+        line: 1,
+        suggestion: 'Gradually migrate JavaScript files to TypeScript for better development experience',
+        impact: 'Improved code reliability and developer productivity',
         confidence: 0.70
       });
     }
 
-    // Bug risk issues
-    if (Math.random() > 0.6) {
+    if (language === 'Python' && stars < 10) {
       issues.push({
-        id: `bug-risk-${repo.id}-1`,
-        type: 'bug-risk',
-        severity: 'high',
-        title: 'Potential Null Reference',
-        description: 'Object property accessed without null check',
-        file: 'utils/validator.js',
-        line: 34,
-        suggestion: 'Add null/undefined checks before property access',
-        codeSnippet: `if (user && user.profile) {\n  return user.profile.name;\n}`,
-        impact: 'Runtime errors in production',
-        confidence: 0.85
+        id: `best-practice-${repo.id}-2`,
+        type: 'best-practice',
+        severity: 'low',
+        title: 'Python Code Quality',
+        description: 'Consider adding type hints and following PEP 8 standards',
+        file: files[0],
+        line: 1,
+        suggestion: 'Add type hints, use black formatter, and follow Python best practices',
+        impact: 'More maintainable and professional Python code',
+        confidence: 0.65
+      });
+    }
+
+    // Testing-related issues
+    if (!topics.includes('testing') && !description.toLowerCase().includes('test')) {
+      issues.push({
+        id: `best-practice-${repo.id}-3`,
+        type: 'best-practice',
+        severity: 'medium',
+        title: 'Missing Test Coverage',
+        description: 'No testing framework detected in repository',
+        file: 'package.json',
+        line: 1,
+        suggestion: `Add testing framework (${language === 'JavaScript' ? 'Jest' : language === 'Python' ? 'pytest' : 'appropriate testing framework'})`,
+        impact: 'Improved code reliability and easier refactoring',
+        confidence: 0.80
+      });
+    }
+
+    // Documentation issues
+    if (!repo.description || repo.description.length < 20) {
+      issues.push({
+        id: `maintainability-${repo.id}-2`,
+        type: 'maintainability',
+        severity: 'low',
+        title: 'Repository Description',
+        description: 'Repository lacks a comprehensive description',
+        file: 'README.md',
+        line: 1,
+        suggestion: 'Add detailed description explaining project purpose, features, and usage',
+        impact: 'Better discoverability and user understanding',
+        confidence: 0.60
+      });
+    }
+
+    // Contribution and community issues
+    if (forks > stars * 2) {
+      issues.push({
+        id: `maintainability-${repo.id}-3`,
+        type: 'maintainability',
+        severity: 'low',
+        title: 'High Fork Ratio',
+        description: 'Repository has more forks than stars - consider community engagement',
+        file: 'README.md',
+        line: 1,
+        suggestion: 'Improve documentation, add contribution guidelines, and engage with community',
+        impact: 'Better community interaction and project growth',
+        confidence: 0.70
+      });
+    }
+
+    // Ensure we have at least some issues for analysis
+    if (issues.length === 0) {
+      issues.push({
+        id: `general-${repo.id}-1`,
+        type: 'best-practice',
+        severity: 'info',
+        title: 'Code Review Completed',
+        description: `Repository analysis completed for ${repo.name} - ${language} project`,
+        file: files[0],
+        line: 1,
+        suggestion: 'Continue following best practices for your tech stack',
+        impact: 'Maintains code quality standards',
+        confidence: 0.90
       });
     }
 

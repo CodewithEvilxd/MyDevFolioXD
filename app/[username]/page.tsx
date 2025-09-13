@@ -49,6 +49,8 @@ import {
   AICodeDreamGenerator,
   AIPoweredCodeReviewAssistant,
   SmartProjectRecommendationEngine,
+  NeuralCodeDreamWeaver,
+  AIPortfolioAssistant,
 
   // Visualization Components
   TechStackVisualization,
@@ -1344,6 +1346,16 @@ ${repos.slice(0, 5).map(repo => `- ${repo.name}: ${repo.description || 'No descr
           <AICareerPathPredictor username={username} repos={repos} />
         </motion.div>
 
+        {/* Neural Code Dream Weaver */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 4.6, duration: 0.5 }}
+        >
+          <NeuralCodeDreamWeaver username={username} repos={repos} />
+        </motion.div>
+
         {/* Real-Time Tech Stack Health Monitor */}
         <motion.div
           className='w-full mb-16'
@@ -1389,6 +1401,9 @@ ${repos.slice(0, 5).map(repo => `- ${repo.name}: ${repo.description || 'No descr
           />
         </motion.div>
       </div>
+
+      {/* AI Portfolio Assistant */}
+      <AIPortfolioAssistant username={username} />
 
       {/* Visitor Counter with Real GitHub Data */}
       <VisitorCounter username={username} repos={repos} />

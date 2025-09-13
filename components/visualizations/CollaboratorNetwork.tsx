@@ -41,7 +41,6 @@ export default function CollaboratorNetwork({ username, repos }: CollaboratorNet
     const fetchCollaboratorData = async () => {
       try {
         setLoading(true);
-
         if (!repos || repos.length === 0) {
           setCollaborators([]);
           setCollaborations([]);
@@ -49,18 +48,21 @@ export default function CollaboratorNetwork({ username, repos }: CollaboratorNet
           return;
         }
 
+        // Check if we have a GitHub token
+        const token = getGitHubToken();
+
         // Fetch real contributor data from GitHub
         const contributorMap = new Map<string, Collaborator>();
         const collaborationMap = new Map<string, Collaboration>();
 
         // Process repositories in smaller batches to avoid rate limits
         const batchSize = 3; // Smaller batch size for better rate limit handling
+
         for (let i = 0; i < Math.min(repos.length, 10); i += batchSize) {
           const batch = repos.slice(i, i + batchSize);
 
           const batchPromises = batch.map(async (repo) => {
             try {
-              const token = getGitHubToken();
               const headers: Record<string, string> = {
                 'Accept': 'application/vnd.github.v3+json'
               };
@@ -95,7 +97,6 @@ export default function CollaboratorNetwork({ username, repos }: CollaboratorNet
                 return [];
               }
             } catch (error) {
-              // Silently handle error
               return [];
             }
           });
@@ -165,11 +166,6 @@ export default function CollaboratorNetwork({ username, repos }: CollaboratorNet
         setCollaborators(realCollaborators);
         setCollaborations(realCollaborations);
 
-        // Draw network visualization
-        setTimeout(() => {
-          drawNetwork(realCollaborators, realCollaborations);
-        }, 100);
-
       } catch (err) {
         setCollaborators([]);
         setCollaborations([]);
@@ -181,6 +177,18 @@ export default function CollaboratorNetwork({ username, repos }: CollaboratorNet
     fetchCollaboratorData();
   }, [username, repos]);
 
+  // Redraw network when data or view changes
+  useEffect(() => {
+    if (collaborators.length > 0 && !loading) {
+      // Small delay to ensure canvas is ready
+      const timeoutId = setTimeout(() => {
+        drawNetwork(collaborators, collaborations);
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [collaborators, collaborations, networkView, loading]);
+
   const drawNetwork = (nodes: Collaborator[], edges: Collaboration[]) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -189,11 +197,14 @@ export default function CollaboratorNetwork({ username, repos }: CollaboratorNet
     if (!ctx) return;
 
     // Set canvas size
-    canvas.width = canvas.offsetWidth;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width || 800;
     canvas.height = 400;
 
-    // Clear canvas
+    // Clear canvas without setting background (let CSS handle it)
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (nodes.length === 0) return;
 
     // Calculate node positions (simple circular layout)
     const centerX = canvas.width / 2;
@@ -214,15 +225,15 @@ export default function CollaboratorNetwork({ username, repos }: CollaboratorNet
       const sourceNode = nodes.find(n => n.login === edge.source);
       const targetNode = nodes.find(n => n.login === edge.target);
 
-      if (sourceNode && targetNode) {
+      if (sourceNode && targetNode && sourceNode.x !== undefined && sourceNode.y !== undefined && targetNode.x !== undefined && targetNode.y !== undefined) {
         ctx.beginPath();
-        ctx.moveTo(sourceNode.x!, sourceNode.y!);
-        ctx.lineTo(targetNode.x!, targetNode.y!);
+        ctx.moveTo(sourceNode.x, sourceNode.y);
+        ctx.lineTo(targetNode.x, targetNode.y);
         ctx.stroke();
 
         // Draw edge weight indicator
-        const midX = (sourceNode.x! + targetNode.x!) / 2;
-        const midY = (sourceNode.y! + targetNode.y!) / 2;
+        const midX = (sourceNode.x + targetNode.x) / 2;
+        const midY = (sourceNode.y + targetNode.y) / 2;
 
         ctx.fillStyle = 'rgba(135, 118, 234, 0.8)';
         ctx.beginPath();
@@ -233,7 +244,7 @@ export default function CollaboratorNetwork({ username, repos }: CollaboratorNet
 
     // Draw nodes
     nodes.forEach(node => {
-      if (!node.x || !node.y) return;
+      if (node.x === undefined || node.y === undefined) return;
 
       // Draw avatar background
       ctx.fillStyle = 'rgba(135, 118, 234, 0.2)';
@@ -344,31 +355,105 @@ export default function CollaboratorNetwork({ username, repos }: CollaboratorNet
 
       {/* Network Visualization */}
       <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)] mb-6'>
-        {collaborators.length > 0 ? (
-          <>
-            <canvas
-              ref={canvasRef}
-              onClick={handleCanvasClick}
-              className='w-full h-96 cursor-pointer'
-              style={{ maxWidth: '100%', height: '400px' }}
-            />
-            <p className='text-xs text-[var(--text-secondary)] mt-2 text-center'>
-              Click on any collaborator to view their details
-            </p>
-          </>
-        ) : (
-          <div className='w-full h-96 flex items-center justify-center text-center'>
-            <div>
-              <div className='w-16 h-16 mx-auto mb-4 bg-[var(--primary)] bg-opacity-20 rounded-full flex items-center justify-center'>
-                <svg className='w-8 h-8 text-[var(--primary)]' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' />
-                </svg>
-              </div>
-              <h3 className='text-lg font-semibold mb-2'>No Collaborators Yet</h3>
-              <p className='text-[var(--text-secondary)] text-sm'>
-                Start collaborating on GitHub repositories to build your network!
+        {networkView === 'overview' ? (
+          // Overview View - Basic network visualization
+          collaborators.length > 0 ? (
+            <>
+              <canvas
+                ref={canvasRef}
+                onClick={handleCanvasClick}
+                className='w-full h-96 cursor-pointer bg-transparent'
+                style={{
+                  maxWidth: '100%',
+                  height: '400px',
+                  backgroundColor: 'transparent'
+                }}
+              />
+              <p className='text-xs text-[var(--text-secondary)] mt-2 text-center'>
+                Click on any collaborator to view their details
               </p>
+            </>
+          ) : (
+            <div className='w-full h-96 flex items-center justify-center text-center'>
+              <div>
+                <div className='w-16 h-16 mx-auto mb-4 bg-[var(--primary)] bg-opacity-20 rounded-full flex items-center justify-center'>
+                  <svg className='w-8 h-8 text-[var(--primary)]' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' />
+                  </svg>
+                </div>
+                <h3 className='text-lg font-semibold mb-2'>No Collaborators Yet</h3>
+                <p className='text-[var(--text-secondary)] text-sm'>
+                  Start collaborating on GitHub repositories to build your network!
+                </p>
+              </div>
             </div>
+          )
+        ) : (
+          // Detailed View - Enhanced network with more information
+          <div className='space-y-4'>
+            {collaborators.length > 0 ? (
+              <>
+                <div className='relative'>
+                  <canvas
+                    ref={canvasRef}
+                    onClick={handleCanvasClick}
+                    className='w-full h-96 cursor-pointer bg-transparent'
+                    style={{
+                      maxWidth: '100%',
+                      height: '400px',
+                      backgroundColor: 'transparent'
+                    }}
+                  />
+                  <div className='absolute top-2 right-2 bg-black bg-opacity-75 text-white px-3 py-1 rounded text-sm'>
+                    Detailed View
+                  </div>
+                </div>
+
+                {/* Detailed Statistics */}
+                <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mt-4'>
+                  <div className='text-center p-3 bg-[var(--card-bg)] rounded-lg'>
+                    <div className='text-lg font-bold text-[var(--primary)]'>{collaborators.length}</div>
+                    <div className='text-xs text-[var(--text-secondary)]'>Total Nodes</div>
+                  </div>
+                  <div className='text-center p-3 bg-[var(--card-bg)] rounded-lg'>
+                    <div className='text-lg font-bold text-blue-500'>{collaborations.length}</div>
+                    <div className='text-xs text-[var(--text-secondary)]'>Connections</div>
+                  </div>
+                  <div className='text-center p-3 bg-[var(--card-bg)] rounded-lg'>
+                    <div className='text-lg font-bold text-green-500'>
+                      {collaborators.reduce((sum, c) => sum + c.contributions, 0)}
+                    </div>
+                    <div className='text-xs text-[var(--text-secondary)]'>Total Contributions</div>
+                  </div>
+                  <div className='text-center p-3 bg-[var(--card-bg)] rounded-lg'>
+                    <div className='text-lg font-bold text-purple-500'>
+                      {collaborators.length > 1
+                        ? Math.round((collaborations.length / (collaborators.length * (collaborators.length - 1) / 2)) * 100)
+                        : 0}%
+                    </div>
+                    <div className='text-xs text-[var(--text-secondary)]'>Network Density</div>
+                  </div>
+                </div>
+
+                <p className='text-xs text-[var(--text-secondary)] mt-2 text-center'>
+                  Click on any collaborator node to view detailed information
+                </p>
+              </>
+            ) : (
+              <div className='w-full h-96 flex items-center justify-center text-center'>
+                <div>
+                  <div className='w-16 h-16 mx-auto mb-4 bg-[var(--primary)] bg-opacity-20 rounded-full flex items-center justify-center'>
+                    <svg className='w-8 h-8 text-[var(--primary)]' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' />
+                    </svg>
+                  </div>
+                  <h3 className='text-lg font-semibold mb-2'>No Collaborator Data Available</h3>
+                  <p className='text-[var(--text-secondary)] text-sm'>
+                    Switch to Overview view or collaborate on more repositories to see detailed network analysis.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -422,84 +507,209 @@ export default function CollaboratorNetwork({ username, repos }: CollaboratorNet
         </motion.div>
       )}
 
-      {/* Top Collaborators */}
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-        <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
-          <h3 className='text-lg font-semibold mb-4'>Top Collaborators</h3>
-          <div className='space-y-3'>
-            {collaborators.length > 0 ? (
-              getTopCollaborators().map((collaborator, index) => (
-                <motion.div
-                  key={collaborator.id}
-                  className='flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--card-bg)] cursor-pointer'
-                  onClick={() => setSelectedCollaborator(collaborator)}
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <div className='flex items-center justify-center w-6 h-6 bg-[var(--primary)] text-white text-xs font-bold rounded-full'>
-                    {index + 1}
+      {networkView === 'overview' ? (
+        // Overview View - Basic statistics and top collaborators
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+          <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
+            <h3 className='text-lg font-semibold mb-4'>Top Collaborators</h3>
+            <div className='space-y-3'>
+              {collaborators.length > 0 ? (
+                getTopCollaborators().map((collaborator, index) => (
+                  <motion.div
+                    key={collaborator.id}
+                    className='flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--card-bg)] cursor-pointer'
+                    onClick={() => setSelectedCollaborator(collaborator)}
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <div className='flex items-center justify-center w-6 h-6 bg-[var(--primary)] text-white text-xs font-bold rounded-full'>
+                      {index + 1}
+                    </div>
+                    <img
+                      src={collaborator.avatar_url}
+                      alt={collaborator.name || collaborator.login}
+                      className='w-8 h-8 rounded-full'
+                    />
+                    <div className='flex-1'>
+                      <p className='font-medium text-sm'>
+                        {collaborator.name || collaborator.login}
+                      </p>
+                      <p className='text-xs text-[var(--text-secondary)]'>
+                        {collaborator.contributions} contributions
+                      </p>
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div className='text-center py-8'>
+                  <div className='w-12 h-12 mx-auto mb-3 bg-[var(--primary)] bg-opacity-20 rounded-full flex items-center justify-center'>
+                    <svg className='w-6 h-6 text-[var(--primary)]' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' />
+                    </svg>
                   </div>
-                  <img
-                    src={collaborator.avatar_url}
-                    alt={collaborator.name || collaborator.login}
-                    className='w-8 h-8 rounded-full'
-                  />
-                  <div className='flex-1'>
-                    <p className='font-medium text-sm'>
-                      {collaborator.name || collaborator.login}
-                    </p>
-                    <p className='text-xs text-[var(--text-secondary)]'>
-                      {collaborator.contributions} contributions
-                    </p>
-                  </div>
-                </motion.div>
-              ))
-            ) : (
-              <div className='text-center py-8'>
-                <div className='w-12 h-12 mx-auto mb-3 bg-[var(--primary)] bg-opacity-20 rounded-full flex items-center justify-center'>
-                  <svg className='w-6 h-6 text-[var(--primary)]' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' />
-                  </svg>
+                  <p className='text-[var(--text-secondary)] text-sm'>No collaborators yet</p>
                 </div>
-                <p className='text-[var(--text-secondary)] text-sm'>No collaborators yet</p>
+              )}
+            </div>
+          </div>
+
+          {/* Network Statistics */}
+          <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
+            <h3 className='text-lg font-semibold mb-4'>Network Statistics</h3>
+            <div className='space-y-4'>
+              <div className='flex justify-between items-center'>
+                <span className='text-sm text-[var(--text-secondary)]'>Total Collaborators</span>
+                <span className='font-semibold text-lg'>{collaborators.length}</span>
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* Network Statistics */}
-        <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
-          <h3 className='text-lg font-semibold mb-4'>Network Statistics</h3>
-          <div className='space-y-4'>
-            <div className='flex justify-between items-center'>
-              <span className='text-sm text-[var(--text-secondary)]'>Total Collaborators</span>
-              <span className='font-semibold text-lg'>{collaborators.length}</span>
-            </div>
+              <div className='flex justify-between items-center'>
+                <span className='text-sm text-[var(--text-secondary)]'>Active Connections</span>
+                <span className='font-semibold text-lg'>{collaborations.length}</span>
+              </div>
 
-            <div className='flex justify-between items-center'>
-              <span className='text-sm text-[var(--text-secondary)]'>Active Connections</span>
-              <span className='font-semibold text-lg'>{collaborations.length}</span>
-            </div>
+              <div className='flex justify-between items-center'>
+                <span className='text-sm text-[var(--text-secondary)]'>Avg Contributions</span>
+                <span className='font-semibold text-lg'>
+                  {collaborators.length > 0
+                    ? Math.round(collaborators.reduce((sum, c) => sum + c.contributions, 0) / collaborators.length)
+                    : 0}
+                </span>
+              </div>
 
-            <div className='flex justify-between items-center'>
-              <span className='text-sm text-[var(--text-secondary)]'>Avg Contributions</span>
-              <span className='font-semibold text-lg'>
-                {collaborators.length > 0
-                  ? Math.round(collaborators.reduce((sum, c) => sum + c.contributions, 0) / collaborators.length)
-                  : 0}
-              </span>
-            </div>
-
-            <div className='flex justify-between items-center'>
-              <span className='text-sm text-[var(--text-secondary)]'>Network Density</span>
-              <span className='font-semibold text-lg'>
-                {collaborators.length > 1
-                  ? Math.round((collaborations.length / (collaborators.length * (collaborators.length - 1) / 2)) * 100)
-                  : 0}%
-              </span>
+              <div className='flex justify-between items-center'>
+                <span className='text-sm text-[var(--text-secondary)]'>Network Density</span>
+                <span className='font-semibold text-lg'>
+                  {collaborators.length > 1
+                    ? Math.round((collaborations.length / (collaborators.length * (collaborators.length - 1) / 2)) * 100)
+                    : 0}%
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        // Detailed View - Advanced analytics and insights
+        <div className='space-y-6'>
+          {/* Collaboration Analysis */}
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+            <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
+              <h4 className='font-semibold mb-2 text-blue-500'>Strongest Connections</h4>
+              <div className='space-y-2'>
+                {collaborations
+                  .sort((a, b) => b.weight - a.weight)
+                  .slice(0, 3)
+                  .map((collab, index) => (
+                    <div key={index} className='text-sm'>
+                      <span className='font-medium'>{collab.source}</span>
+                      <span className='text-[var(--text-secondary)]'> ↔ </span>
+                      <span className='font-medium'>{collab.target}</span>
+                      <div className='text-xs text-[var(--text-secondary)]'>
+                        {collab.weight} shared project{collab.weight > 1 ? 's' : ''}
+                      </div>
+                    </div>
+                  ))}
+                {collaborations.length === 0 && (
+                  <p className='text-sm text-[var(--text-secondary)]'>No connections yet</p>
+                )}
+              </div>
+            </div>
+
+            <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
+              <h4 className='font-semibold mb-2 text-green-500'>Most Active Collaborator</h4>
+              <div className='flex items-center gap-3'>
+                {collaborators.length > 0 ? (
+                  <>
+                    <img
+                      src={getTopCollaborators()[0]?.avatar_url}
+                      alt={getTopCollaborators()[0]?.name || getTopCollaborators()[0]?.login}
+                      className='w-10 h-10 rounded-full'
+                    />
+                    <div>
+                      <p className='font-medium text-sm'>
+                        {getTopCollaborators()[0]?.name || getTopCollaborators()[0]?.login}
+                      </p>
+                      <p className='text-xs text-[var(--text-secondary)]'>
+                        {getTopCollaborators()[0]?.contributions} contributions
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <p className='text-sm text-[var(--text-secondary)]'>No collaborators yet</p>
+                )}
+              </div>
+            </div>
+
+            <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
+              <h4 className='font-semibold mb-2 text-purple-500'>Network Health</h4>
+              <div className='space-y-2'>
+                <div className='flex justify-between text-sm'>
+                  <span>Connectivity:</span>
+                  <span className='font-medium'>
+                    {collaborators.length > 1
+                      ? Math.round((collaborations.length / (collaborators.length * (collaborators.length - 1) / 2)) * 100)
+                      : 0}%
+                  </span>
+                </div>
+                <div className='flex justify-between text-sm'>
+                  <span>Growth Potential:</span>
+                  <span className='font-medium text-green-500'>
+                    {collaborators.length < 5 ? 'High' : collaborators.length < 10 ? 'Medium' : 'Low'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Repository Collaboration Matrix */}
+          {collaborators.length > 0 && (
+            <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
+              <h4 className='font-semibold mb-4'>Repository Collaboration Matrix</h4>
+              <div className='overflow-x-auto'>
+                <table className='w-full text-sm'>
+                  <thead>
+                    <tr className='border-b border-[var(--card-border)]'>
+                      <th className='text-left py-2 px-3'>Collaborator</th>
+                      <th className='text-center py-2 px-3'>Contributions</th>
+                      <th className='text-center py-2 px-3'>Projects</th>
+                      <th className='text-center py-2 px-3'>Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {collaborators
+                      .sort((a, b) => b.contributions - a.contributions)
+                      .slice(0, 8)
+                      .map((collaborator) => (
+                        <tr key={collaborator.id} className='border-b border-[var(--card-border)] hover:bg-[var(--card-bg)]'>
+                          <td className='py-2 px-3'>
+                            <div className='flex items-center gap-2'>
+                              <img
+                                src={collaborator.avatar_url}
+                                alt={collaborator.name || collaborator.login}
+                                className='w-6 h-6 rounded-full'
+                              />
+                              <span className='font-medium'>{collaborator.name || collaborator.login}</span>
+                            </div>
+                          </td>
+                          <td className='text-center py-2 px-3'>{collaborator.contributions}</td>
+                          <td className='text-center py-2 px-3'>{collaborator.repositories.length}</td>
+                          <td className='text-center py-2 px-3'>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              collaborator.contributions > 50 ? 'bg-green-500/20 text-green-600' :
+                              collaborator.contributions > 20 ? 'bg-yellow-500/20 text-yellow-600' :
+                              'bg-gray-500/20 text-gray-600'
+                            }`}>
+                              {collaborator.contributions > 50 ? 'High' :
+                               collaborator.contributions > 20 ? 'Medium' : 'Low'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Legend */}
       <div className='mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-[var(--text-secondary)]'>
@@ -517,6 +727,20 @@ export default function CollaboratorNetwork({ username, repos }: CollaboratorNet
           <div className='w-3 h-3 bg-[var(--primary)] bg-opacity-80 rounded-full'></div>
           <span>Collaboration Strength</span>
         </div>
+
+        {networkView === 'detailed' && (
+          <>
+            <div className='flex items-center gap-2'>
+              <div className='w-4 h-4 bg-blue-500 bg-opacity-20 border-2 border-blue-500 border-opacity-50 rounded-full'></div>
+              <span>High Activity</span>
+            </div>
+
+            <div className='flex items-center gap-2'>
+              <div className='w-4 h-4 bg-green-500 bg-opacity-20 border-2 border-green-500 border-opacity-50 rounded-full'></div>
+              <span>Strong Connection</span>
+            </div>
+          </>
+        )}
       </div>
     </motion.div>
   );
