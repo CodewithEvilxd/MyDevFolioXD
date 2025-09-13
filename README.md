@@ -174,8 +174,7 @@ MyDevFolioXD/
 │   └── index.ts                # Type definitions
 └── public/                     # Static assets
     ├── folio.png              # Main project logo
-    ├── mydevfolio.png         # Alternative logo
-    └── githubfoliologo.png    # GitHub-specific logo
+    └── mydevfolio.png         # Alternative logo
 ```
 
 ## 🎯 Usage

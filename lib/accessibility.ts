@@ -70,7 +70,7 @@ export const ariaLabels = {
   media: {
     image: (alt: string) => `Image: ${alt}`,
     avatar: (username: string) => `Avatar for ${username}`,
-    logo: 'GitHubFolioXD logo',
+    logo: 'MyDevFolioXD logo',
     icon: (name: string) => `${name} icon`,
   },
 

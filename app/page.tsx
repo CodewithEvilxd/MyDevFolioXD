@@ -82,7 +82,7 @@ export default function HomePage() {
             >
               <Image
                 alt='logo'
-                src='/githubfoliologo.png'
+                src='/mydevfolio.png'
                 width={50}
                 height={50}
                 className='drop-shadow-lg'
