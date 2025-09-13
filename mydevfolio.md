@@ -4,7 +4,7 @@
 [![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)](https://github.com/CodewithEvilxd/MyDevFolioXD)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](https://github.com/CodewithEvilxd/MyDevFolioXD/blob/main/LICENSE)
 
-![MyDevFolioXD Banner](https://raw.githubusercontent.com/CodewithEvilxd/MyDevFolioXD/main/public/folio.png)
+![MyDevFolioXD Banner](https://my-dev-folio-xd.vercel.app/folio.png)
 
 ## 🤖 Your GitHub Profile Transformed Into an AI-Powered Portfolio
 
