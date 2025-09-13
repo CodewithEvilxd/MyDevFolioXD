@@ -5,9 +5,11 @@ import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/lib/LanguageContext';
 import RateLimitIndicator from '@/components/ui/RateLimitIndicator';
 
 export default function HomePage() {
+  const { t } = useLanguage();
   const [username, setUsername] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -95,7 +97,7 @@ export default function HomePage() {
               }}
               transition={{ duration: 5, repeat: Infinity }}
             >
-              MyDevFolioXD
+              {t('hero.title')}
             </motion.h1>
           </motion.div>
 
@@ -106,22 +108,8 @@ export default function HomePage() {
             transition={{ delay: 0.4, duration: 0.8 }}
           >
             <span className='bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent'>
-              Transform Your GitHub
+              {t('hero.subtitle')}
             </span>
-            <br />
-            <motion.span
-              className='bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent'
-              animate={{
-                textShadow: [
-                  '0 0 20px rgba(168, 85, 247, 0.4)',
-                  '0 0 40px rgba(236, 72, 153, 0.6)',
-                  '0 0 20px rgba(168, 85, 247, 0.4)',
-                ],
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              Into Magic ✨
-            </motion.span>
           </motion.h2>
 
           <motion.p
@@ -130,16 +118,7 @@ export default function HomePage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.8 }}
           >
-            🚀 Create a <span className='text-purple-400 font-semibold'>stunning developer portfolio</span> that makes recruiters go{' '}
-            <motion.span
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className='text-yellow-400 font-bold'
-            >
-              "Wow!"
-            </motion.span>
-            <br />
-            Just enter your GitHub username and watch the magic happen! ✨
+            {t('hero.description')}
           </motion.p>
 
           {/* Enhanced Social Media Icons */}
@@ -239,13 +218,13 @@ export default function HomePage() {
                   transition={{ delay: 1.2, duration: 0.6 }}
                 >
                   <div className='absolute inset-y-0 left-0 flex items-center pl-5 pointer-events-none'>
-                    <span className='text-gray-400 font-medium'>github.com/</span>
+                    <span className='text-gray-400 font-medium'>{t('hero.github')}</span>
                   </div>
                   <motion.input
                     type='text'
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder='your-username'
+                    placeholder={t('hero.placeholder')}
                     className='w-full bg-white/10 border border-white/20 text-white placeholder-gray-400 pl-32 pr-5 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-300 text-lg font-medium backdrop-blur-sm'
                     required
                     whileFocus={{ scale: 1.02 }}
@@ -283,7 +262,7 @@ export default function HomePage() {
                             <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z' />
                           </svg>
                         </motion.div>
-                        Creating Magic...
+                        {t('hero.analyzing')}
                       </>
                     ) : (
                       <>
@@ -293,7 +272,7 @@ export default function HomePage() {
                         >
                           🎨
                         </motion.span>
-                        Create My Magical Portfolio
+                        {t('hero.cta')}
                         <motion.span
                           animate={{ scale: [1, 1.2, 1] }}
                           transition={{ duration: 1.5, repeat: Infinity }}
@@ -328,8 +307,8 @@ export default function HomePage() {
                   d='M13 10V3L4 14h7v7l9-11h-7z'
                 />
               ),
-              title: '⚡ Instant Magic',
-              description: '✨ Your dream portfolio in seconds! Just type your GitHub username and watch the magic unfold! 🎉',
+              title: t('features.instant'),
+              description: t('features.instant_desc'),
               gradient: 'from-yellow-500/20 to-orange-500/20',
               iconColor: 'text-yellow-400',
               delay: 0
@@ -343,8 +322,8 @@ export default function HomePage() {
                   d='M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z'
                 />
               ),
-              title: '🎨 Showcase Your Art',
-              description: '🌟 Your projects deserve the spotlight! Beautiful cards that make your code shine like stars ✨',
+              title: t('features.showcase'),
+              description: t('features.showcase_desc'),
               gradient: 'from-purple-500/20 to-pink-500/20',
               iconColor: 'text-purple-400',
               delay: 0.2
@@ -358,8 +337,8 @@ export default function HomePage() {
                   d='M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z'
                 />
               ),
-              title: '🔗 Share & Shine',
-              description: '🎯 Share your amazing portfolio with a cute link! Updates magically with your latest GitHub adventures! 🚀',
+              title: t('features.share'),
+              description: t('features.share_desc'),
               gradient: 'from-blue-500/20 to-cyan-500/20',
               iconColor: 'text-blue-400',
               delay: 0.4
@@ -503,7 +482,7 @@ export default function HomePage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 2.9, duration: 0.8 }}
           >
-            🌟 Your <span className='text-purple-400 font-bold'>magical portfolio</span> awaits at
+            {t('footer.portfolio')}
           </motion.p>
 
           <motion.div
@@ -543,10 +522,10 @@ export default function HomePage() {
             transition={{ delay: 3.3, duration: 0.8 }}
           >
             {[
-              { icon: '✅', text: 'No signup needed', color: 'text-green-400' },
-              { icon: '💎', text: 'Free forever', color: 'text-blue-400' },
-              { icon: '🔮', text: 'Pure magic', color: 'text-purple-400' },
-              { icon: '⚡', text: 'Instant creation', color: 'text-yellow-400' }
+              { icon: '✅', text: t('footer.signup'), color: 'text-green-400' },
+              { icon: '💎', text: t('footer.free'), color: 'text-blue-400' },
+              { icon: '🔮', text: t('footer.magic'), color: 'text-purple-400' },
+              { icon: '⚡', text: t('footer.instant'), color: 'text-yellow-400' }
             ].map((item, index) => (
               <motion.div
                 key={item.text}

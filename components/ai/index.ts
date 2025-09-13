@@ -8,3 +8,4 @@ export { default as SmartProjectRecommendationEngine } from './SmartProjectRecom
 export { default as ProjectRecommendationEngine } from './ProjectRecommendationEngine';
 export { default as NeuralCodeDreamWeaver } from './NeuralCodeDreamWeaver';
 export { default as AIPortfolioAssistant } from './AIPortfolioAssistant';
+export { default as InterviewPreparationModule } from './InterviewPreparationModule';

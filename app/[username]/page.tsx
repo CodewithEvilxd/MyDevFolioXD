@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { GitHubUser, Repository } from '@/types';
 import { createGitHubHeaders } from '@/lib/githubToken';
 import { motion } from 'framer-motion';
+import SEOHead from '@/components/SEOHead';
 
 // Organized component imports
 import {
@@ -35,6 +36,7 @@ import {
   GitHubInsightsDashboard,
   AutomatedPortfolioSEOOptimizer,
   APIFallbackDashboard,
+  PerformanceMonitoringDashboard,
 
   // Interactive Components
   InteractiveResumeBuilder,
@@ -42,6 +44,8 @@ import {
   LiveCodingAnimation,
   BlogSection,
   CodeSnippetShowcase,
+  CodeSnippetManager,
+  LiveCodeExecutionEnvironment,
   CollaborativeCodePlayground,
 
   // AI Components
@@ -51,6 +55,7 @@ import {
   SmartProjectRecommendationEngine,
   NeuralCodeDreamWeaver,
   AIPortfolioAssistant,
+  InterviewPreparationModule,
 
   // Visualization Components
   TechStackVisualization,
@@ -80,8 +85,39 @@ import {
   RealTimeTechStackHealthMonitor,
   InteractiveSkillAssessmentPlatform,
   GitHubStreakCounter,
-  CodeQualityMetrics
+  CodeQualityMetrics,
+
+  // Astral Components
+  // AstralPortfolioNavigation, // Moved to separate import
+
+  // Culinary Components
+  CulinaryCodeFlavorProfiling,
+
+  // Weather Components
+  WeatherPatternPortfolioAdaptation,
+
+  // Olfactory Components
+  OlfactoryMemoryPalaceConstructor,
+
+  // Dream Components
+  DreamJournalPortfolioIntegration,
+
+  // Bio-Rhythm Components
+  BioRhythmPortfolioSynchronization,
+
+  // Sonic Components
+  SonicMeditationPortfolioEnvironment,
+
+  // Crystal Components
+  CrystalEnergyPortfolioAlignment,
+
+  // Taste Components
+  TasteBudCodeTasteProfiling,
+
+  // Chakra Components
+  ChakraPortfolioEnergyBalancing
 } from '@/components';
+import { AstralPortfolioNavigation } from '@/components/astral';
 
 export default function ProfilePage() {
   const params = useParams();
@@ -445,6 +481,15 @@ ${repos.slice(0, 5).map(repo => `- ${repo.name}: ${repo.description || 'No descr
 
   return (
     <>
+      <SEOHead
+        username={username}
+        avatar={userData.avatar_url}
+        bio={userData.bio || undefined}
+        skills={skills}
+        projects={userData.public_repos}
+        followers={userData.followers}
+        stars={repos.reduce((sum, repo) => sum + repo.stargazers_count, 0)}
+      />
       <SideNav username={username} />
 
       <div className='flex flex-col items-center pt-12 pb-32 relative'>
@@ -876,6 +921,119 @@ ${repos.slice(0, 5).map(repo => `- ${repo.name}: ${repo.description || 'No descr
           />
         </motion.div>
 
+        {/* Astral Portfolio Navigation */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.15, duration: 0.5 }}
+        >
+          <AstralPortfolioNavigation username={username} repos={repos} />
+        </motion.div>
+
+        {/* Culinary Code Flavor Profiling */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2, duration: 0.5 }}
+        >
+          <CulinaryCodeFlavorProfiling username={username} repos={repos} />
+        </motion.div>
+
+        {/* Weather Pattern Portfolio Adaptation */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.25, duration: 0.5 }}
+        >
+          <WeatherPatternPortfolioAdaptation username={username} repos={repos} />
+        </motion.div>
+
+        {/* Olfactory Memory Palace Constructor */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.3, duration: 0.5 }}
+        >
+          <OlfactoryMemoryPalaceConstructor username={username} repos={repos} />
+        </motion.div>
+
+        {/* Dream Journal Portfolio Integration */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.35, duration: 0.5 }}
+        >
+          <DreamJournalPortfolioIntegration username={username} repos={repos} />
+        </motion.div>
+
+        {/* Bio-Rhythm Portfolio Synchronization */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.4, duration: 0.5 }}
+        >
+          <BioRhythmPortfolioSynchronization username={username} repos={repos} />
+        </motion.div>
+
+        {/* Sonic Meditation Portfolio Environment */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.45, duration: 0.5 }}
+        >
+          <SonicMeditationPortfolioEnvironment username={username} repos={repos} />
+        </motion.div>
+
+        {/* Crystal Energy Portfolio Alignment */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5, duration: 0.5 }}
+        >
+          <CrystalEnergyPortfolioAlignment username={username} repos={repos} />
+        </motion.div>
+
+        {/* Taste Bud Code Taste Profiling */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.55, duration: 0.5 }}
+        >
+          <TasteBudCodeTasteProfiling username={username} repos={repos} />
+        </motion.div>
+
+        {/* Chakra Portfolio Energy Balancing */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.6, duration: 0.5 }}
+        >
+          <ChakraPortfolioEnergyBalancing username={username} repos={repos} />
+        </motion.div>
+
+        {/* Performance Monitoring Dashboard */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.15, duration: 0.5 }}
+        >
+          <PerformanceMonitoringDashboard
+            username={username}
+            repos={repos}
+          />
+        </motion.div>
+
         {/* Code Review Analytics */}
         <motion.div
           className='w-full mb-16'
@@ -1096,6 +1254,16 @@ ${repos.slice(0, 5).map(repo => `- ${repo.name}: ${repo.description || 'No descr
           <CodeSnippetShowcase username={username} repos={repos} />
         </motion.div>
 
+        {/* Code Snippet Manager */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.85, duration: 0.5 }}
+        >
+          <CodeSnippetManager username={username} repos={repos} />
+        </motion.div>
+
         {/* PDF Export */}
         <motion.div
           className='w-full mb-16'
@@ -1164,6 +1332,16 @@ ${repos.slice(0, 5).map(repo => `- ${repo.name}: ${repo.description || 'No descr
           transition={{ delay: 2.4, duration: 0.5 }}
         >
           <CodePlayground />
+        </motion.div>
+
+        {/* Live Code Execution Environment */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 2.45, duration: 0.5 }}
+        >
+          <LiveCodeExecutionEnvironment username={username} repos={repos} />
         </motion.div>
 
         {/* Quantum Code Entanglement Visualizer */}
@@ -1344,6 +1522,16 @@ ${repos.slice(0, 5).map(repo => `- ${repo.name}: ${repo.description || 'No descr
           transition={{ delay: 4.2, duration: 0.5 }}
         >
           <AICareerPathPredictor username={username} repos={repos} />
+        </motion.div>
+
+        {/* AI Interview Preparation Module */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 4.25, duration: 0.5 }}
+        >
+          <InterviewPreparationModule username={username} repos={repos} user={userData} />
         </motion.div>
 
         {/* Neural Code Dream Weaver */}

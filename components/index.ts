@@ -22,6 +22,36 @@ export * from './ai';
 // Visualization Components
 export * from './visualizations';
 
+// Astral Components
+export * from './astral';
+
+// Culinary Components
+export * from './culinary';
+
+// Weather Components
+export * from './weather';
+
+// Olfactory Components
+export * from './olfactory';
+
+// Dream Components
+export * from './dream';
+
+// Bio-Rhythm Components
+export * from './biorhythm';
+
+// Sonic Components
+export * from './sonic';
+
+// Crystal Components
+export * from './crystal';
+
+// Taste Components
+export * from './taste';
+
+// Chakra Components
+export * from './chakra';
+
 // Animation Utilities
 export * from '../lib/animations';
 export * from '../lib/hooks/useAnimations';

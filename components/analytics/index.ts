@@ -6,3 +6,4 @@ export { default as CodeReviewAnalytics } from './CodeReviewAnalytics';
 export { default as DeveloperProductivityTracker } from './DeveloperProductivityTracker';
 export { default as APIFallbackDashboard } from './APIFallbackDashboard';
 export { default as AutomatedPortfolioSEOOptimizer } from './AutomatedPortfolioSEOOptimizer';
+export { default as PerformanceMonitoringDashboard } from './PerformanceMonitoringDashboard';

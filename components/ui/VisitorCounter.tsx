@@ -16,16 +16,22 @@ export default function VisitorCounter({ username, repos }: VisitorCounterProps)
 
   useEffect(() => {
     const initializeCounter = async () => {
-      // Clear any existing visitor count and start fresh with personalized count
-      localStorage.removeItem('visitorCount');
-      localStorage.removeItem('hasVisited');
+      // Check if already counted in this session to avoid refresh increments
+      const hasVisitedSession = sessionStorage.getItem('hasVisitedSession');
 
-      // Start fresh from 1 since you haven't deployed yet
-      const personalizedStartCount = 0; // Start from 0, will show as 1
-      const newCount = personalizedStartCount + 1;
+      if (!hasVisitedSession) {
+        // Get existing visitor count for this device/browser
+        const existingCount = parseInt(localStorage.getItem('visitorCount') || '0', 10);
+        const newCount = existingCount + 1;
 
-      setVisitorCount(newCount);
-      localStorage.setItem('visitorCount', newCount.toString());
+        setVisitorCount(newCount);
+        localStorage.setItem('visitorCount', newCount.toString());
+        sessionStorage.setItem('hasVisitedSession', 'true');
+      } else {
+        // Just display the existing count without incrementing
+        const existingCount = parseInt(localStorage.getItem('visitorCount') || '1', 10);
+        setVisitorCount(existingCount);
+      }
 
       // Try to fetch GitHub repository views if username and repos are available
       if (username && repos && repos.length > 0) {

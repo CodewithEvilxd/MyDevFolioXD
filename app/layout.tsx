@@ -4,7 +4,9 @@ import { JetBrains_Mono, Inter } from 'next/font/google';
 import './globals.css';
 import { Analytics } from '@vercel/analytics/next';
 import { ThemeProvider } from '@/lib/ThemeProvider';
+import { LanguageProvider } from '@/lib/LanguageContext';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import VisitorCounter from '@/components/ui/VisitorCounter';
 
 // Font for code and technical elements
@@ -53,17 +55,21 @@ export default function RootLayout({
   return (
     <html lang='en' className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body className='font-sans min-h-screen flex flex-col relative'>
-        <ThemeProvider>
-          <ThemeToggle />
-          <div className='fixed top-2 right-2 sm:top-4 sm:right-4 text-xs font-mono text-[var(--text-secondary)]'>
-            {new Date()
-              .toLocaleDateString('en-US', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-              })
-              .toUpperCase()}
-          </div>
+        <LanguageProvider>
+          <ThemeProvider>
+            <div className='fixed top-2 right-2 sm:top-4 sm:right-4 flex items-center gap-2'>
+              <LanguageSwitcher />
+              <ThemeToggle />
+            </div>
+            <div className='fixed top-2 left-2 sm:top-4 sm:left-4 text-xs font-mono text-[var(--text-secondary)]'>
+              {new Date()
+                .toLocaleDateString('en-US', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                })
+                .toUpperCase()}
+            </div>
 
           <main className='flex-grow container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12'>
             {children}
@@ -84,7 +90,8 @@ export default function RootLayout({
           <div className='grid-marker bottom-[15%] right-[10%]'></div>
           <div className='grid-marker top-[10%] right-[30%]'></div>
           <div className='grid-marker bottom-[30%] left-[20%]'></div>
-        </ThemeProvider>
+          </ThemeProvider>
+        </LanguageProvider>
       </body>
     </html>
   );
