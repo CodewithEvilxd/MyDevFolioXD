@@ -1,0 +1,523 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { getGitHubToken } from '@/lib/githubToken';
+
+interface Collaborator {
+  id: string;
+  login: string;
+  avatar_url: string;
+  name?: string;
+  contributions: number;
+  repositories: string[];
+  location?: string;
+  company?: string;
+  x?: number;
+  y?: number;
+}
+
+interface Collaboration {
+  source: string;
+  target: string;
+  weight: number;
+  repositories: string[];
+}
+
+interface CollaboratorNetworkProps {
+  username: string;
+  repos: any[];
+}
+
+export default function CollaboratorNetwork({ username, repos }: CollaboratorNetworkProps) {
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [collaborations, setCollaborations] = useState<Collaboration[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCollaborator, setSelectedCollaborator] = useState<Collaborator | null>(null);
+  const [networkView, setNetworkView] = useState<'overview' | 'detailed'>('overview');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const fetchCollaboratorData = async () => {
+      try {
+        setLoading(true);
+
+        if (!repos || repos.length === 0) {
+          setCollaborators([]);
+          setCollaborations([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch real contributor data from GitHub
+        const contributorMap = new Map<string, Collaborator>();
+        const collaborationMap = new Map<string, Collaboration>();
+
+        // Process repositories in smaller batches to avoid rate limits
+        const batchSize = 3; // Smaller batch size for better rate limit handling
+        for (let i = 0; i < Math.min(repos.length, 10); i += batchSize) {
+          const batch = repos.slice(i, i + batchSize);
+
+          const batchPromises = batch.map(async (repo) => {
+            try {
+              const token = getGitHubToken();
+              const headers: Record<string, string> = {
+                'Accept': 'application/vnd.github.v3+json'
+              };
+
+              if (token) {
+                headers['Authorization'] = `token ${token}`;
+              }
+
+              const response = await fetch(
+                `https://api.github.com/repos/${username}/${repo.name}/contributors?per_page=10`,
+                { headers }
+              );
+
+              if (response.ok) {
+                let contributors: any[] = [];
+                try {
+                  const responseText = await response.text();
+                  if (responseText.trim() === '') {
+                    return [];
+                  }
+                  contributors = JSON.parse(responseText);
+                } catch (parseError) {
+                  return [];
+                }
+
+                if (!Array.isArray(contributors)) {
+                  return [];
+                }
+
+                return contributors;
+              } else {
+                return [];
+              }
+            } catch (error) {
+              // Silently handle error
+              return [];
+            }
+          });
+
+          const batchResults = await Promise.all(batchPromises);
+
+          // Process batch results
+          batchResults.forEach((contributors, batchIndex) => {
+            const currentRepo = batch[batchIndex];
+            contributors.forEach((contributor: any) => {
+              if (contributor.login !== username) { // Exclude the main user
+                const existing = contributorMap.get(contributor.login);
+
+                if (existing) {
+                  existing.contributions += contributor.contributions;
+                  if (!existing.repositories.includes(currentRepo.name)) {
+                    existing.repositories.push(currentRepo.name);
+                  }
+                } else {
+                  contributorMap.set(contributor.login, {
+                    id: contributor.id.toString(),
+                    login: contributor.login,
+                    avatar_url: contributor.avatar_url,
+                    name: contributor.login, // Will be updated if we can fetch user data
+                    contributions: contributor.contributions,
+                    repositories: [currentRepo.name],
+                    location: undefined,
+                    company: undefined
+                  });
+                }
+              }
+            });
+          });
+
+          // Add delay between batches to respect rate limits
+          if (i + batchSize < Math.min(repos.length, 10)) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+          }
+        }
+
+        // Convert to arrays
+        const realCollaborators = Array.from(contributorMap.values());
+
+        // Create collaborations based on shared repositories
+        const realCollaborations: Collaboration[] = [];
+        for (let i = 0; i < realCollaborators.length; i++) {
+          for (let j = i + 1; j < realCollaborators.length; j++) {
+            const collab1 = realCollaborators[i];
+            const collab2 = realCollaborators[j];
+
+            const sharedRepos = collab1.repositories.filter(repo =>
+              collab2.repositories.includes(repo)
+            );
+
+            if (sharedRepos.length > 0) {
+              realCollaborations.push({
+                source: collab1.login,
+                target: collab2.login,
+                weight: sharedRepos.length,
+                repositories: sharedRepos
+              });
+            }
+          }
+        }
+
+        // Set real data or empty state
+        setCollaborators(realCollaborators);
+        setCollaborations(realCollaborations);
+
+        // Draw network visualization
+        setTimeout(() => {
+          drawNetwork(realCollaborators, realCollaborations);
+        }, 100);
+
+      } catch (err) {
+        setCollaborators([]);
+        setCollaborations([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCollaboratorData();
+  }, [username, repos]);
+
+  const drawNetwork = (nodes: Collaborator[], edges: Collaboration[]) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Set canvas size
+    canvas.width = canvas.offsetWidth;
+    canvas.height = 400;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Calculate node positions (simple circular layout)
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 60;
+
+    nodes.forEach((node, index) => {
+      const angle = (index / nodes.length) * 2 * Math.PI;
+      node.x = centerX + radius * Math.cos(angle);
+      node.y = centerY + radius * Math.sin(angle);
+    });
+
+    // Draw edges
+    ctx.strokeStyle = 'rgba(135, 118, 234, 0.3)';
+    ctx.lineWidth = 2;
+
+    edges.forEach(edge => {
+      const sourceNode = nodes.find(n => n.login === edge.source);
+      const targetNode = nodes.find(n => n.login === edge.target);
+
+      if (sourceNode && targetNode) {
+        ctx.beginPath();
+        ctx.moveTo(sourceNode.x!, sourceNode.y!);
+        ctx.lineTo(targetNode.x!, targetNode.y!);
+        ctx.stroke();
+
+        // Draw edge weight indicator
+        const midX = (sourceNode.x! + targetNode.x!) / 2;
+        const midY = (sourceNode.y! + targetNode.y!) / 2;
+
+        ctx.fillStyle = 'rgba(135, 118, 234, 0.8)';
+        ctx.beginPath();
+        ctx.arc(midX, midY, Math.max(2, edge.weight), 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    });
+
+    // Draw nodes
+    nodes.forEach(node => {
+      if (!node.x || !node.y) return;
+
+      // Draw avatar background
+      ctx.fillStyle = 'rgba(135, 118, 234, 0.2)';
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, 25, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Draw avatar border
+      ctx.strokeStyle = selectedCollaborator?.id === node.id ? '#8976EA' : 'rgba(135, 118, 234, 0.5)';
+      ctx.lineWidth = selectedCollaborator?.id === node.id ? 3 : 2;
+      ctx.stroke();
+
+      // Draw avatar image (simplified as circle)
+      ctx.fillStyle = '#8976EA';
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, 20, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Draw contribution count
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '10px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(node.contributions.toString(), node.x, node.y + 3);
+    });
+  };
+
+  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // Find clicked collaborator
+    const clickedCollaborator = collaborators.find(collaborator => {
+      if (!collaborator.x || !collaborator.y) return false;
+      const distance = Math.sqrt((x - collaborator.x) ** 2 + (y - collaborator.y) ** 2);
+      return distance <= 25;
+    });
+
+    setSelectedCollaborator(clickedCollaborator || null);
+  };
+
+  const getTopCollaborators = () => {
+    return collaborators
+      .sort((a, b) => b.contributions - a.contributions)
+      .slice(0, 5);
+  };
+
+  if (loading) {
+    return (
+      <div className='card'>
+        <div className='flex items-center justify-between mb-6'>
+          <h2 className='text-2xl font-bold'>Collaborator Network</h2>
+          <div className='w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin'></div>
+        </div>
+        <div className='animate-pulse'>
+          <div className='h-96 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4'></div>
+          <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className='h-20 bg-gray-200 dark:bg-gray-700 rounded-lg'></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      className='card'
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className='flex items-center justify-between mb-6'>
+        <div>
+          <h2 className='text-2xl font-bold'>Collaborator Network</h2>
+          <p className='text-[var(--text-secondary)] mt-1'>
+            {collaborators.length > 0
+              ? `${collaborators.length} collaborators across ${collaborations.length} connections`
+              : 'No collaborators found yet'
+            }
+          </p>
+        </div>
+
+        {/* View Toggle */}
+        <div className='flex bg-[var(--background)] rounded-lg p-1'>
+          {[
+            { id: 'overview', label: 'Overview' },
+            { id: 'detailed', label: 'Detailed' }
+          ].map((view) => (
+            <button
+              key={view.id}
+              onClick={() => setNetworkView(view.id as any)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                networkView === view.id
+                  ? 'bg-[var(--primary)] text-white'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              }`}
+            >
+              {view.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Network Visualization */}
+      <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)] mb-6'>
+        {collaborators.length > 0 ? (
+          <>
+            <canvas
+              ref={canvasRef}
+              onClick={handleCanvasClick}
+              className='w-full h-96 cursor-pointer'
+              style={{ maxWidth: '100%', height: '400px' }}
+            />
+            <p className='text-xs text-[var(--text-secondary)] mt-2 text-center'>
+              Click on any collaborator to view their details
+            </p>
+          </>
+        ) : (
+          <div className='w-full h-96 flex items-center justify-center text-center'>
+            <div>
+              <div className='w-16 h-16 mx-auto mb-4 bg-[var(--primary)] bg-opacity-20 rounded-full flex items-center justify-center'>
+                <svg className='w-8 h-8 text-[var(--primary)]' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' />
+                </svg>
+              </div>
+              <h3 className='text-lg font-semibold mb-2'>No Collaborators Yet</h3>
+              <p className='text-[var(--text-secondary)] text-sm'>
+                Start collaborating on GitHub repositories to build your network!
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Selected Collaborator Details */}
+      {selectedCollaborator && (
+        <motion.div
+          className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)] mb-6'
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className='flex items-center gap-4'>
+            <img
+              src={selectedCollaborator.avatar_url}
+              alt={selectedCollaborator.name || selectedCollaborator.login}
+              className='w-12 h-12 rounded-full'
+            />
+            <div className='flex-1'>
+              <h3 className='font-semibold text-lg'>
+                {selectedCollaborator.name || selectedCollaborator.login}
+              </h3>
+              <p className='text-[var(--text-secondary)] text-sm'>@{selectedCollaborator.login}</p>
+              <div className='flex items-center gap-4 mt-2 text-sm'>
+                <span className='flex items-center gap-1'>
+                  <span className='text-blue-500'>📊</span>
+                  {selectedCollaborator.contributions} contributions
+                </span>
+                {selectedCollaborator.location && (
+                  <span className='flex items-center gap-1'>
+                    <span className='text-green-500'>📍</span>
+                    {selectedCollaborator.location}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className='mt-4'>
+            <h4 className='font-medium mb-2'>Collaborated on:</h4>
+            <div className='flex flex-wrap gap-2'>
+              {selectedCollaborator.repositories.map(repo => (
+                <span
+                  key={repo}
+                  className='px-3 py-1 bg-blue-500 bg-opacity-10 text-blue-600 dark:text-blue-400 border border-blue-500 border-opacity-30 rounded-full text-xs font-medium hover:bg-blue-500 hover:bg-opacity-20 transition-colors'
+                >
+                  {repo}
+                </span>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Top Collaborators */}
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+        <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
+          <h3 className='text-lg font-semibold mb-4'>Top Collaborators</h3>
+          <div className='space-y-3'>
+            {collaborators.length > 0 ? (
+              getTopCollaborators().map((collaborator, index) => (
+                <motion.div
+                  key={collaborator.id}
+                  className='flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--card-bg)] cursor-pointer'
+                  onClick={() => setSelectedCollaborator(collaborator)}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <div className='flex items-center justify-center w-6 h-6 bg-[var(--primary)] text-white text-xs font-bold rounded-full'>
+                    {index + 1}
+                  </div>
+                  <img
+                    src={collaborator.avatar_url}
+                    alt={collaborator.name || collaborator.login}
+                    className='w-8 h-8 rounded-full'
+                  />
+                  <div className='flex-1'>
+                    <p className='font-medium text-sm'>
+                      {collaborator.name || collaborator.login}
+                    </p>
+                    <p className='text-xs text-[var(--text-secondary)]'>
+                      {collaborator.contributions} contributions
+                    </p>
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              <div className='text-center py-8'>
+                <div className='w-12 h-12 mx-auto mb-3 bg-[var(--primary)] bg-opacity-20 rounded-full flex items-center justify-center'>
+                  <svg className='w-6 h-6 text-[var(--primary)]' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' />
+                  </svg>
+                </div>
+                <p className='text-[var(--text-secondary)] text-sm'>No collaborators yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Network Statistics */}
+        <div className='bg-[var(--background)] p-4 rounded-lg border border-[var(--card-border)]'>
+          <h3 className='text-lg font-semibold mb-4'>Network Statistics</h3>
+          <div className='space-y-4'>
+            <div className='flex justify-between items-center'>
+              <span className='text-sm text-[var(--text-secondary)]'>Total Collaborators</span>
+              <span className='font-semibold text-lg'>{collaborators.length}</span>
+            </div>
+
+            <div className='flex justify-between items-center'>
+              <span className='text-sm text-[var(--text-secondary)]'>Active Connections</span>
+              <span className='font-semibold text-lg'>{collaborations.length}</span>
+            </div>
+
+            <div className='flex justify-between items-center'>
+              <span className='text-sm text-[var(--text-secondary)]'>Avg Contributions</span>
+              <span className='font-semibold text-lg'>
+                {collaborators.length > 0
+                  ? Math.round(collaborators.reduce((sum, c) => sum + c.contributions, 0) / collaborators.length)
+                  : 0}
+              </span>
+            </div>
+
+            <div className='flex justify-between items-center'>
+              <span className='text-sm text-[var(--text-secondary)]'>Network Density</span>
+              <span className='font-semibold text-lg'>
+                {collaborators.length > 1
+                  ? Math.round((collaborations.length / (collaborators.length * (collaborators.length - 1) / 2)) * 100)
+                  : 0}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className='mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-[var(--text-secondary)]'>
+        <div className='flex items-center gap-2'>
+          <div className='w-4 h-4 bg-[var(--primary)] bg-opacity-20 border-2 border-[var(--primary)] border-opacity-50 rounded-full'></div>
+          <span>Collaborator Node</span>
+        </div>
+
+        <div className='flex items-center gap-2'>
+          <div className='w-8 h-0.5 bg-[var(--primary)] bg-opacity-30'></div>
+          <span>Collaboration Link</span>
+        </div>
+
+        <div className='flex items-center gap-2'>
+          <div className='w-3 h-3 bg-[var(--primary)] bg-opacity-80 rounded-full'></div>
+          <span>Collaboration Strength</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
