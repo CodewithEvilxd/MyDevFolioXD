@@ -8,6 +8,14 @@ const nextConfig = {
       'raw.githubusercontent.com',
     ],
   },
+  // Optimize build output
+  experimental: {
+    optimizePackageImports: ['framer-motion', 'recharts'],
+  },
+  // Reduce bundle size in production
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
 };
 
 module.exports = nextConfig;
