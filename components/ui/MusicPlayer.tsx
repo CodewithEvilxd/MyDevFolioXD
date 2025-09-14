@@ -64,7 +64,51 @@ function MusicPlayer() {
     let mood = 'Neutral';
     let bpm = 90;
 
-    if (name.includes('love') || name.includes('pyar') || name.includes('romantic') || name.includes('dil')) {
+    // Rap/Hip-Hop detection
+    if (name.includes('rap') || name.includes('hip hop') || name.includes('hip-hop') ||
+        name.includes('diss') || name.includes('track') || name.includes('beat') ||
+        name.includes('flow') || name.includes('bars') || name.includes('freestyle') ||
+        name.includes('cypher') || name.includes('spit') || name.includes('lyric') ||
+        name.includes('hook') || name.includes('verse') || name.includes('chorus') ||
+        artist.includes('eminem') || artist.includes('drake') || artist.includes('kanye') ||
+        artist.includes('jay-z') || artist.includes('nas') || artist.includes('snoop') ||
+        artist.includes('50 cent') || artist.includes('game') || artist.includes('ice cube') ||
+        artist.includes('tupac') || artist.includes('biggie') || artist.includes('notorious') ||
+        artist.includes('nicki') || artist.includes('cardi') || artist.includes('doja cat') ||
+        artist.includes('travis scott') || artist.includes('post malone') || artist.includes('lil wayne')) {
+      genre = 'Rap/Hip-Hop';
+      mood = 'Confident';
+      bpm = 95;
+    }
+    // Pop detection
+    else if (name.includes('pop') || name.includes('hit') || name.includes('chart') ||
+             artist.includes('justin') || artist.includes('taylor') || artist.includes('ariana') ||
+             artist.includes('billie') || artist.includes('olivia') || artist.includes('dua lipa') ||
+             artist.includes('harry') || artist.includes('adele')) {
+      genre = 'Pop';
+      mood = 'Upbeat';
+      bpm = 110;
+    }
+    // Rock detection
+    else if (name.includes('rock') || name.includes('metal') || name.includes('punk') ||
+             name.includes('guitar') || name.includes('band') ||
+             artist.includes('metallica') || artist.includes('ac/dc') || artist.includes('nirvana') ||
+             artist.includes('queen') || artist.includes('led zeppelin') || artist.includes('pink floyd')) {
+      genre = 'Rock';
+      mood = 'Energetic';
+      bpm = 130;
+    }
+    // Electronic/Dance detection
+    else if (name.includes('electronic') || name.includes('edm') || name.includes('house') ||
+             name.includes('techno') || name.includes('dubstep') || name.includes('remix') ||
+             artist.includes('avicii') || artist.includes('calvin harris') || artist.includes('david guetta') ||
+             artist.includes('skrillex') || artist.includes('marshmello')) {
+      genre = 'Electronic/Dance';
+      mood = 'Energetic';
+      bpm = 128;
+    }
+    // Bollywood specific detection
+    else if (name.includes('love') || name.includes('pyar') || name.includes('romantic') || name.includes('dil')) {
       genre = 'Bollywood Romantic';
       mood = 'Romantic';
       bpm = 80;
@@ -85,6 +129,7 @@ function MusicPlayer() {
       bpm = 75;
     }
 
+    // Artist-based genre override
     if (artist.includes('lata') || artist.includes('mohammed rafi') || artist.includes('kishore')) {
       genre = 'Classic Bollywood';
     }
@@ -97,13 +142,73 @@ function MusicPlayer() {
     if (!song) return [];
 
     try {
-      const similarQueries = [
-        song.name, // Same song name (different versions)
-        `${song.genre} songs`, // Genre-based songs
-        `${song.mood} songs`, // Mood-based songs
-        `bollywood ${song.mood} songs`, // Bollywood + mood
-        `bollywood ${song.genre} songs`, // Bollywood + genre
-      ].filter(q => q && q.trim().length > 0);
+      let similarQueries: string[] = [];
+
+      // Base queries that work for all genres
+      similarQueries.push(song.name); // Same song name (different versions)
+
+      // Genre-specific queries
+      if (song.genre) {
+        if (song.genre === 'Rap/Hip-Hop') {
+          similarQueries.push(
+            'rap songs',
+            'hip hop tracks',
+            'rap music',
+            'hip hop beats',
+            'rap freestyle'
+          );
+        } else if (song.genre === 'Pop') {
+          similarQueries.push(
+            'pop songs',
+            'pop music',
+            'top hits',
+            'pop chart',
+            'popular songs'
+          );
+        } else if (song.genre === 'Rock') {
+          similarQueries.push(
+            'rock songs',
+            'rock music',
+            'rock band',
+            'guitar rock',
+            'classic rock'
+          );
+        } else if (song.genre === 'Electronic/Dance') {
+          similarQueries.push(
+            'electronic music',
+            'dance music',
+            'edm songs',
+            'electronic beats',
+            'club music'
+          );
+        } else if (song.genre.includes('Bollywood')) {
+          // Bollywood specific queries
+          similarQueries.push(
+            `${song.genre} songs`,
+            `${song.mood || 'popular'} bollywood songs`,
+            'bollywood music',
+            'indian songs',
+            'hindi songs'
+          );
+        } else {
+          // Fallback for other genres
+          similarQueries.push(
+            `${song.genre} songs`,
+            `${song.mood || 'popular'} songs`,
+            `${song.genre} music`
+          );
+        }
+      } else {
+        // Fallback when genre is undefined
+        similarQueries.push(
+          'popular songs',
+          'top hits',
+          'trending music'
+        );
+      }
+
+      // Remove duplicates and empty strings
+      similarQueries = Array.from(new Set(similarQueries.filter(q => q && q.trim().length > 0)));
 
       const similarSongs: Song[] = [];
 
