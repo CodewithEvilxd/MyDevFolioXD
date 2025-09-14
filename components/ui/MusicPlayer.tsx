@@ -64,6 +64,15 @@ function MusicPlayer() {
   const arrangeMusicLikePlatforms = useCallback((songs: Song[], currentSong: Song) => {
     if (!songs.length) return songs;
 
+    // Shuffle function
+    const shuffleArray = (array: Song[]) => {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    };
+
     // 1. Separate songs by genre/mood/language match quality
     const perfectMatches = songs.filter(song =>
       song.genre === currentSong.genre &&
@@ -82,14 +91,30 @@ function MusicPlayer() {
       !(song.genre === currentSong.genre && song.language === currentSong.language)
     );
 
-    // 2. Shuffle within each category for randomness
-    const shuffleArray = (array: Song[]) => {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
-    };
+    // For rap songs, prioritize same genre more aggressively
+    const isRapSong = currentSong.genre?.toLowerCase().includes('rap') || currentSong.genre?.toLowerCase().includes('hip-hop');
+    if (isRapSong) {
+      // Move all rap songs to perfect matches regardless of mood
+      const rapSongs = songs.filter(song =>
+        song.genre?.toLowerCase().includes('rap') || song.genre?.toLowerCase().includes('hip-hop')
+      );
+      // Remove rap songs from other categories to avoid duplicates
+      const nonRapPerfect = perfectMatches.filter(song =>
+        !(song.genre?.toLowerCase().includes('rap') || song.genre?.toLowerCase().includes('hip-hop'))
+      );
+      const nonRapGood = goodMatches.filter(song =>
+        !(song.genre?.toLowerCase().includes('rap') || song.genre?.toLowerCase().includes('hip-hop'))
+      );
+      const nonRapDecent = decentMatches.filter(song =>
+        !(song.genre?.toLowerCase().includes('rap') || song.genre?.toLowerCase().includes('hip-hop'))
+      );
+
+      return [
+        ...shuffleArray([...nonRapPerfect, ...rapSongs]),
+        ...shuffleArray(nonRapGood),
+        ...shuffleArray(nonRapDecent)
+      ].slice(0, 50);
+    }
 
     // 3. Arrange like professional platforms:
     // 70% perfect matches, 20% good matches, 10% decent matches
@@ -281,7 +306,17 @@ function MusicPlayer() {
               'rap songs english',
               'english hip hop',
               'rap music english',
-              'hip hop english songs'
+              'hip hop english songs',
+              'english rap 2024',
+              'new english rap',
+              'english rap hits',
+              'hip hop english latest',
+              'english rap playlist',
+              'english hip hop music',
+              'english rap songs 2023',
+              'english rap tracks',
+              'hip hop english songs',
+              'english rap music playlist'
             );
           } else if (genre.includes('pop')) {
             similarQueries.push(
@@ -447,8 +482,10 @@ function MusicPlayer() {
 
                 const languageMatch = !song.language || tempMetadata.language === song.language;
 
+                // For rap songs, be more strict about mood matching to maintain consistency
+                const isRapSong = song.genre?.toLowerCase().includes('rap') || song.genre?.toLowerCase().includes('hip-hop');
                 const moodMatch = !song.mood || tempMetadata.mood === song.mood ||
-                                Math.random() > 0.7; // 30% chance to include different mood for variety
+                                (!isRapSong && Math.random() > 0.8); // Only 20% chance for different mood, and never for rap
 
                 return genreMatch && languageMatch && moodMatch;
               })
@@ -1314,6 +1351,9 @@ useEffect(() => {
                     <p className='text-xs text-[var(--text-secondary)] truncate'>
                       {currentSong.artist}
                     </p>
+                    <p className='text-xs text-[var(--text-secondary)] truncate'>
+                      {currentSong.album}
+                    </p>
                   </div>
                 </div>
 
@@ -1511,6 +1551,9 @@ useEffect(() => {
                         <p className='text-xs text-[var(--text-secondary)] truncate'>
                           {song.artist}
                         </p>
+                        <p className='text-xs text-[var(--text-secondary)] truncate'>
+                          {song.album}
+                        </p>
                       </div>
                       <button
                         onClick={(e) => {
@@ -1562,6 +1605,9 @@ useEffect(() => {
                         <p className='text-xs text-[var(--text-secondary)] truncate'>
                           {song.artist}
                         </p>
+                        <p className='text-xs text-[var(--text-secondary)] truncate'>
+                          {song.album}
+                        </p>
                       </div>
                       <button
                         onClick={(e) => {
@@ -1600,6 +1646,9 @@ useEffect(() => {
                         </p>
                         <p className='text-xs text-[var(--text-secondary)] truncate'>
                           {song.artist}
+                        </p>
+                        <p className='text-xs text-[var(--text-secondary)] truncate'>
+                          {song.album}
                         </p>
                       </div>
                       <button
@@ -1645,6 +1694,9 @@ useEffect(() => {
                       </p>
                       <p className='text-xs text-[var(--text-secondary)] truncate'>
                         {song.artist}
+                      </p>
+                      <p className='text-xs text-[var(--text-secondary)] truncate'>
+                        {song.album}
                       </p>
                     </div>
                     <div className='flex gap-1'>
