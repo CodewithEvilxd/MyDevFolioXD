@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Repository } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -45,34 +45,7 @@ export default function RealTimeTechStackHealthMonitor({ username, repos }: Real
   const [selectedIssue, setSelectedIssue] = useState<DependencyIssue | null>(null);
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
 
-  useEffect(() => {
-    if (repos.length > 0 && healthReports.length === 0) {
-      scanRepositories();
-    }
-  }, [repos]);
-
-  const scanRepositories = async () => {
-    if (isScanning) return;
-
-    setIsScanning(true);
-
-    try {
-      const reports: RepositoryHealth[] = [];
-
-      for (const repo of repos.slice(0, 5)) { // Scan first 5 repos
-        const report = await scanRepository(repo);
-        reports.push(report);
-      }
-
-      setHealthReports(reports);
-    } catch (error) {
-      console.error('Error scanning repositories:', error);
-    } finally {
-      setIsScanning(false);
-    }
-  };
-
-  const scanRepository = async (repo: Repository): Promise<RepositoryHealth> => {
+  const scanRepository = useCallback(async (repo: Repository): Promise<RepositoryHealth> => {
     try {
       const token = process.env.NEXT_PUBLIC_GITHUB_ACCESS_TOKEN;
       const headers: Record<string, string> = {};
@@ -98,12 +71,15 @@ export default function RealTimeTechStackHealthMonitor({ username, repos }: Real
             const isOutdated = Math.random() > 0.7; // Simulate version checking
             const hasSecurityIssue = Math.random() > 0.8; // Simulate security scanning
 
+            const baseVersion = version.replace(/[^\d.]/g, '').split('.')[0];
+            const nextVersion = parseInt(baseVersion) + 1;
+
             if (hasSecurityIssue) {
               issues.push({
                 id: `security_${repo.id}_${packageName}`,
                 package: packageName,
                 current_version: version,
-                latest_version: `^${parseInt(version.replace(/[^\d]/g, '')) + 1}.0.0`,
+                latest_version: `^${nextVersion}.0.0`,
                 severity: 'critical',
                 type: 'security',
                 description: `Critical security vulnerability in ${packageName}`,
@@ -117,7 +93,7 @@ export default function RealTimeTechStackHealthMonitor({ username, repos }: Real
                 id: `outdated_${repo.id}_${packageName}`,
                 package: packageName,
                 current_version: version,
-                latest_version: `^${parseInt(version.replace(/[^\d]/g, '')) + 1}.0.0`,
+                latest_version: `^${nextVersion}.0.0`,
                 severity: Math.random() > 0.5 ? 'medium' : 'low',
                 type: 'outdated',
                 description: `${packageName} is outdated`,
@@ -129,7 +105,6 @@ export default function RealTimeTechStackHealthMonitor({ username, repos }: Real
           });
         } catch (error) {
           // If package.json exists but can't be parsed, fall back to mock data
-          console.warn(`Could not parse package.json for ${repo.name}:`, error);
           issues.push(...generateDependencyIssues(repo));
         }
       } else if (packageJsonRes.status === 404) {
@@ -138,7 +113,6 @@ export default function RealTimeTechStackHealthMonitor({ username, repos }: Real
         issues.push(...generateDependencyIssues(repo));
       } else {
         // Other error (rate limit, auth, etc.) - log and fall back
-        console.warn(`Failed to fetch package.json for ${repo.name}: ${packageJsonRes.status}`);
         issues.push(...generateDependencyIssues(repo));
       }
 
@@ -163,7 +137,6 @@ export default function RealTimeTechStackHealthMonitor({ username, repos }: Real
         last_checked: new Date()
       };
     } catch (error) {
-      console.error(`Error scanning repository ${repo.name}:`, error);
       // Fallback to mock data
       const issues = generateDependencyIssues(repo);
       const summary = {
@@ -186,7 +159,34 @@ export default function RealTimeTechStackHealthMonitor({ username, repos }: Real
         last_checked: new Date()
       };
     }
-  };
+  }, []);
+
+  const scanRepositories = useCallback(async () => {
+    if (isScanning) return;
+
+    setIsScanning(true);
+
+    try {
+      const reports: RepositoryHealth[] = [];
+
+      for (const repo of repos.slice(0, 5)) { // Scan first 5 repos
+        const report = await scanRepository(repo);
+        reports.push(report);
+      }
+
+      setHealthReports(reports);
+    } catch (error) {
+      console.error('Error scanning repositories:', error);
+    } finally {
+      setIsScanning(false);
+    }
+  }, [repos, isScanning, scanRepository]);
+  useEffect(() => {
+    if (repos.length > 0 && healthReports.length === 0) {
+      scanRepositories();
+    }
+  }, [repos, healthReports.length, scanRepositories]);
+
 
   const generateDependencyIssues = (repo: Repository): DependencyIssue[] => {
     const issues: DependencyIssue[] = [];
