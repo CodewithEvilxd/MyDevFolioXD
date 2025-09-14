@@ -52,6 +52,9 @@ export * from './taste';
 // Chakra Components
 export * from './chakra';
 
+// Revolutionary Components
+export * from './revolutionary/index';
+
 // Animation Utilities
 export * from '../lib/animations';
 export * from '../lib/hooks/useAnimations';

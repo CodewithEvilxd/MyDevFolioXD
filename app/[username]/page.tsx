@@ -118,6 +118,21 @@ import {
   ChakraPortfolioEnergyBalancing
 } from '@/components';
 import { AstralPortfolioNavigation } from '@/components/astral';
+import {
+  PortfolioStarForge,
+  BlackHolePortfolio,
+  MagneticPortfolioFields,
+  PortfolioBlackHole,
+  PortfolioCircusDimension,
+  PortfolioDreamWeaver,
+  PortfolioEcosystemEngine,
+  PortfolioEmotionCanvas,
+  PortfolioMagneticFields,
+  PortfolioTimeCrystal,
+  PortfolioVirusEvolution,
+  PortfolioWeatherSystems,
+  TimeCrystalPortfolio
+} from '@/components/revolutionary';
 
 export default function ProfilePage() {
   const params = useParams();
@@ -417,7 +432,7 @@ ${repos.slice(0, 5).map(repo => `- ${repo.name}: ${repo.description || 'No descr
           Creating your portfolio...
         </h2>
         <p className='text-[var(--text-secondary)] max-w-md text-center'>
-          We're fetching your GitHub data and crafting a beautiful developer
+          We&apos;re fetching your GitHub data and crafting a beautiful developer
           portfolio.
         </p>
       </div>
@@ -447,12 +462,12 @@ ${repos.slice(0, 5).map(repo => `- ${repo.name}: ${repo.description || 'No descr
         <h2 className='text-3xl font-bold mb-4 font-mono'>Profile Not Found</h2>
 
         <p className='text-xl mb-6 text-[var(--text-secondary)]'>
-          We couldn't find a GitHub profile for "
-          <span className='text-[var(--primary)]'>{username}</span>".
+          We couldn&apos;t find a GitHub profile for &quot;
+          <span className='text-[var(--primary)]'>{username}</span>&quot;.
         </p>
 
         <p className='mb-8 text-[var(--text-secondary)] max-w-md'>
-          Please check that you've entered a valid GitHub username or try again
+          Please check that you&apos;ve entered a valid GitHub username or try again
           later.
         </p>
 
@@ -838,7 +853,7 @@ ${repos.slice(0, 5).map(repo => `- ${repo.name}: ${repo.description || 'No descr
               </div>
               <h3 className='text-xl font-bold mb-4'>No Repositories Found</h3>
               <p className='text-[var(--text-secondary)] mb-6 max-w-md mx-auto'>
-                This GitHub profile doesn't have any public repositories yet.
+                This GitHub profile doesn&apos;t have any public repositories yet.
                 Start creating projects to showcase your skills!
               </p>
               <a
@@ -1174,12 +1189,142 @@ ${repos.slice(0, 5).map(repo => `- ${repo.name}: ${repo.description || 'No descr
           <ProjectCollaborationInsights username={username} repos={repos} />
         </motion.div>
 
-        {/* Portfolio Analytics */}
+        {/* Portfolio Star Forge */}
         <motion.div
           className='w-full mb-16'
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.2, duration: 0.5 }}
+        >
+          <PortfolioStarForge username={username} />
+        </motion.div>
+
+        {/* Black Hole Portfolio */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.25, duration: 0.5 }}
+        >
+          <BlackHolePortfolio username={username} />
+        </motion.div>
+
+        {/* Magnetic Portfolio Fields */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.3, duration: 0.5 }}
+        >
+          <MagneticPortfolioFields username={username} />
+        </motion.div>
+
+        {/* Portfolio Black Hole */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.35, duration: 0.5 }}
+        >
+          <PortfolioBlackHole username={username} />
+        </motion.div>
+
+        {/* Portfolio Circus Dimension */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.4, duration: 0.5 }}
+        >
+          <PortfolioCircusDimension username={username} />
+        </motion.div>
+
+        {/* Portfolio Dream Weaver */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.45, duration: 0.5 }}
+        >
+          <PortfolioDreamWeaver username={username} />
+        </motion.div>
+
+        {/* Portfolio Ecosystem Engine */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5, duration: 0.5 }}
+        >
+          <PortfolioEcosystemEngine username={username} />
+        </motion.div>
+
+        {/* Portfolio Emotion Canvas */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.55, duration: 0.5 }}
+        >
+          <PortfolioEmotionCanvas username={username} />
+        </motion.div>
+
+        {/* Portfolio Magnetic Fields */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.6, duration: 0.5 }}
+        >
+          <PortfolioMagneticFields username={username} />
+        </motion.div>
+
+        {/* Portfolio Time Crystal */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.65, duration: 0.5 }}
+        >
+          <PortfolioTimeCrystal username={username} />
+        </motion.div>
+
+        {/* Portfolio Virus Evolution */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.7, duration: 0.5 }}
+        >
+          <PortfolioVirusEvolution username={username} />
+        </motion.div>
+
+        {/* Portfolio Weather Systems */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.75, duration: 0.5 }}
+        >
+          <PortfolioWeatherSystems username={username} />
+        </motion.div>
+
+        {/* Time Crystal Portfolio */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.8, duration: 0.5 }}
+        >
+          <TimeCrystalPortfolio username={username} />
+        </motion.div>
+
+        {/* Portfolio Analytics */}
+        <motion.div
+          className='w-full mb-16'
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.25, duration: 0.5 }}
         >
           <PortfolioAnalytics />
         </motion.div>

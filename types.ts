@@ -139,3 +139,116 @@ export interface LanguagePercentage {
   bytes: number;
   color?: string;
 }
+
+// GitHub Event Types
+export interface GitHubEvent {
+  id: string;
+  type: string;
+  actor: {
+    id: number;
+    login: string;
+    avatar_url: string;
+  };
+  repo: {
+    id: number;
+    name: string;
+    url: string;
+  };
+  payload: any;
+  public: boolean;
+  created_at: string;
+}
+
+// GitHub Commit Types
+export interface GitHubCommit {
+  sha: string;
+  commit: {
+    author: {
+      name: string;
+      email: string;
+      date: string;
+    };
+    committer: {
+      name: string;
+      email: string;
+      date: string;
+    };
+    message: string;
+  };
+  author: {
+    login: string;
+    id: number;
+    avatar_url: string;
+  } | null;
+  committer: {
+    login: string;
+    id: number;
+    avatar_url: string;
+  } | null;
+}
+
+// GitHub Issue Types
+export interface GitHubIssue {
+  id: number;
+  number: number;
+  title: string;
+  body: string;
+  state: 'open' | 'closed';
+  user: {
+    login: string;
+    id: number;
+    avatar_url: string;
+  };
+  labels: Array<{
+    name: string;
+    color: string;
+  }>;
+  created_at: string;
+  updated_at: string;
+  closed_at: string | null;
+}
+
+// GitHub Pull Request Types
+export interface GitHubPullRequest {
+  id: number;
+  number: number;
+  title: string;
+  body: string;
+  state: 'open' | 'closed';
+  user: {
+    login: string;
+    id: number;
+    avatar_url: string;
+  };
+  head: {
+    ref: string;
+    sha: string;
+  };
+  base: {
+    ref: string;
+    sha: string;
+  };
+  merged: boolean;
+  merged_at: string | null;
+  created_at: string;
+  updated_at: string;
+  closed_at: string | null;
+}
+
+// Enhanced GitHub User with stats
+export interface GitHubUserWithStats extends GitHubUser {
+  events?: GitHubEvent[];
+  repositories?: Repository[];
+  stats?: {
+    totalStars: number;
+    totalForks: number;
+    totalRepos: number;
+    languages: Record<string, any>;
+    activity: any;
+    contributions: any;
+    streak: any;
+    productivity: any;
+    social: any;
+    impact: any;
+  };
+}

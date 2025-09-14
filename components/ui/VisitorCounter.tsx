@@ -9,32 +9,48 @@ interface VisitorCounterProps {
 }
 
 export default function VisitorCounter({ username, repos }: VisitorCounterProps) {
-  const [visitorCount, setVisitorCount] = useState(0);
+  const [totalUniqueVisitors, setTotalUniqueVisitors] = useState(0);
+  const [todayVisitors, setTodayVisitors] = useState(0);
   const [githubViews, setGithubViews] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
+  const [isNewVisitor, setIsNewVisitor] = useState(false);
 
   useEffect(() => {
     const initializeCounter = async () => {
       try {
-        // Check if this device has already been counted
-        const hasVisited = localStorage.getItem('hasVisited');
+        // Track visitor using local API
+        const trackResponse = await fetch('/api/visitor', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-        if (!hasVisited) {
-          // New device: increment global counter using CountAPI
-          const response = await fetch('https://api.countapi.xyz/hit/mydevfolio/visitors');
-          const data = await response.json();
-          setVisitorCount(data.value);
-          localStorage.setItem('hasVisited', 'true');
+        if (trackResponse.ok) {
+          const trackData = await trackResponse.json();
+          setTotalUniqueVisitors(trackData.totalUniqueVisitors);
+          setTodayVisitors(trackData.todayVisitors);
+          setIsNewVisitor(trackData.isNewVisitor);
+
+          // Show welcome message for new visitors
+          if (trackData.isNewVisitor) {
+            setShowMessage(true);
+            setTimeout(() => setShowMessage(false), 3000);
+          }
         } else {
-          // Existing device: just get current count
-          const response = await fetch('https://api.countapi.xyz/get/mydevfolio/visitors');
-          const data = await response.json();
-          setVisitorCount(data.value);
+          // Fallback: just get current stats
+          const getResponse = await fetch('/api/visitor');
+          if (getResponse.ok) {
+            const getData = await getResponse.json();
+            setTotalUniqueVisitors(getData.totalUniqueVisitors);
+            setTodayVisitors(getData.todayVisitors);
+          }
         }
       } catch (error) {
-        // Fallback if API fails
-        setVisitorCount(1);
+        // Fallback values if API fails
+        setTotalUniqueVisitors(1);
+        setTodayVisitors(1);
       }
 
       // Try to fetch GitHub repository views if username and repos are available
@@ -85,10 +101,9 @@ export default function VisitorCounter({ username, repos }: VisitorCounterProps)
       setIsAnimating(true);
       setTimeout(() => setIsAnimating(false), 1000);
 
-      // Always show welcome message for fresh start
-      setShowMessage(true);
-      localStorage.setItem('hasVisited', 'true');
-      setTimeout(() => setShowMessage(false), 3000);
+      // Animate the counter
+      setIsAnimating(true);
+      setTimeout(() => setIsAnimating(false), 1000);
     };
 
     initializeCounter();
@@ -117,7 +132,7 @@ export default function VisitorCounter({ username, repos }: VisitorCounterProps)
                 <span className='text-xs opacity-90 block md:inline'>
                   {githubViews > 0
                     ? `Portfolio viewed ${formatNumber(githubViews)}+ times!`
-                    : `You're visitor #${formatNumber(visitorCount)}`
+                    : `You're visitor #${formatNumber(totalUniqueVisitors)}`
                   }
                 </span>
               </div>
@@ -145,11 +160,16 @@ export default function VisitorCounter({ username, repos }: VisitorCounterProps)
             animate={isAnimating ? { scale: [1, 1.05, 1] } : {}}
             transition={{ duration: 0.3 }}
           >
-            {formatNumber(githubViews > 0 ? githubViews : visitorCount)}
+            {formatNumber(githubViews > 0 ? githubViews : totalUniqueVisitors)}
           </motion.div>
           {githubViews > 0 && (
             <div className='text-[9px] text-[var(--text-secondary)] mt-0.5'>
-              +{formatNumber(visitorCount)} local
+              +{formatNumber(totalUniqueVisitors)} unique devices
+            </div>
+          )}
+          {!githubViews && todayVisitors > 0 && (
+            <div className='text-[9px] text-[var(--text-secondary)] mt-0.5'>
+              {formatNumber(todayVisitors)} today
             </div>
           )}
         </div>

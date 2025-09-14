@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/LanguageContext';
 import RateLimitIndicator from '@/components/ui/RateLimitIndicator';
 
+
 export default function HomePage() {
   const { t } = useLanguage();
   const [username, setUsername] = useState('');
@@ -443,19 +444,168 @@ export default function HomePage() {
         </div>
       </motion.div>
 
-      {/* Enhanced Bottom Section */}
+      {/* Revolutionary Features Showcase */}
       <motion.div
         className='w-full px-4 pb-20'
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2.5, duration: 1 }}
       >
-        <div className='text-center max-w-4xl mx-auto'>
+        <div className='text-center max-w-6xl mx-auto'>
+          <motion.div
+            className='mb-12'
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2.7, duration: 0.8 }}
+          >
+            <h2 className='text-4xl md:text-6xl font-bold mb-6'>
+              <span className='bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent'>
+                Revolutionary Features
+              </span>
+            </h2>
+            <p className='text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed'>
+              Experience the future of developer portfolios with our groundbreaking AI-powered features
+            </p>
+          </motion.div>
+
+          {/* Features Grid */}
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16'>
+            {[
+              {
+                icon: '💎',
+                title: 'Time Crystal Portfolio',
+                description: 'Multi-dimensional time visualization of your coding journey',
+                component: 'PortfolioTimeCrystal',
+                gradient: 'from-purple-500/20 to-blue-500/20'
+              },
+              {
+                icon: '🧲',
+                title: 'Magnetic Portfolio Fields',
+                description: 'Physics-based particle interactions from GitHub data',
+                component: 'PortfolioMagneticFields',
+                gradient: 'from-blue-500/20 to-green-500/20'
+              },
+              {
+                icon: '🌤️',
+                title: 'Portfolio Weather Systems',
+                description: 'Living weather patterns generated from activity',
+                component: 'PortfolioWeatherSystems',
+                gradient: 'from-yellow-500/20 to-orange-500/20'
+              },
+              {
+                icon: '🧠',
+                title: 'Portfolio Dream Weaver',
+                description: 'Typing pattern analysis creates dream experiences',
+                component: 'PortfolioDreamWeaver',
+                gradient: 'from-pink-500/20 to-purple-500/20'
+              },
+              {
+                icon: '🌌',
+                title: 'Black Hole Portfolio',
+                description: 'Time dilation physics from repository activity',
+                component: 'PortfolioBlackHole',
+                gradient: 'from-red-500/20 to-black'
+              },
+              {
+                icon: '🦠',
+                title: 'Portfolio Virus Evolution',
+                description: 'Self-evolving code organisms with DNA sequences',
+                component: 'PortfolioVirusEvolution',
+                gradient: 'from-green-500/20 to-teal-500/20'
+              },
+              {
+                icon: '🎪',
+                title: 'Portfolio Circus Dimension',
+                description: 'Acrobatic code performances with physics',
+                component: 'PortfolioCircusDimension',
+                gradient: 'from-orange-500/20 to-red-500/20'
+              },
+              {
+                icon: '🌱',
+                title: 'Portfolio Ecosystem Engine',
+                description: 'Digital organisms feeding on visitor attention',
+                component: 'PortfolioEcosystemEngine',
+                gradient: 'from-green-500/20 to-blue-500/20'
+              },
+              {
+                icon: '🎨',
+                title: 'Portfolio Emotion Canvas',
+                description: 'Real-time emotional art from interactions',
+                component: 'PortfolioEmotionCanvas',
+                gradient: 'from-pink-500/20 to-red-500/20'
+              },
+              {
+                icon: '🌟',
+                title: 'Portfolio Star Forge',
+                description: 'AI-generated programming languages',
+                component: 'PortfolioStarForge',
+                gradient: 'from-yellow-500/20 to-purple-500/20'
+              }
+            ].map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                className={`group relative overflow-hidden bg-gradient-to-br ${feature.gradient} backdrop-blur-xl border border-white/10 rounded-3xl p-6 cursor-pointer transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/10`}
+                initial={{ opacity: 0, y: 50, rotateY: -15 }}
+                animate={{ opacity: 1, y: 0, rotateY: 0 }}
+                transition={{
+                  delay: 2.8 + index * 0.1,
+                  duration: 0.8,
+                  type: 'spring',
+                  stiffness: 100
+                }}
+                whileHover={{
+                  y: -10,
+                  scale: 1.02,
+                  rotateY: 5,
+                  transition: { duration: 0.3 }
+                }}
+              >
+                <div className='relative z-10'>
+                  <motion.div
+                    className='w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-4 text-3xl'
+                    whileHover={{
+                      rotate: [0, -10, 10, 0],
+                      transition: { duration: 0.5 }
+                    }}
+                  >
+                    {feature.icon}
+                  </motion.div>
+
+                  <motion.h3
+                    className='text-xl font-bold mb-3 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent'
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 3 + index * 0.1, duration: 0.6 }}
+                  >
+                    {feature.title}
+                  </motion.h3>
+
+                  <motion.p
+                    className='text-gray-300 text-sm leading-relaxed'
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 3.2 + index * 0.1, duration: 0.6 }}
+                  >
+                    {feature.description}
+                  </motion.p>
+                </div>
+
+                <motion.div
+                  className='absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'
+                  initial={{ x: '-100%' }}
+                  whileHover={{ x: '100%' }}
+                  transition={{ duration: 0.8 }}
+                />
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Call to Action */}
           <motion.div
             className='mb-8'
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2.7, duration: 0.8 }}
+            transition={{ delay: 3.5, duration: 0.8 }}
           >
             <div className='inline-flex items-center gap-3 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 border border-white/20 rounded-full px-6 py-3 backdrop-blur-xl shadow-2xl'>
               <motion.span
@@ -463,9 +613,9 @@ export default function HomePage() {
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                💖
+                🚀
               </motion.span>
-              <span className='text-white text-lg font-semibold'>Ready to shine?</span>
+              <span className='text-white text-lg font-semibold'>Experience the Future</span>
               <motion.span
                 className='text-purple-400 text-2xl'
                 animate={{ rotate: [0, 10, -10, 0] }}
@@ -480,16 +630,16 @@ export default function HomePage() {
             className='text-2xl md:text-3xl text-gray-300 mb-8 font-medium leading-relaxed'
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 2.9, duration: 0.8 }}
+            transition={{ delay: 3.7, duration: 0.8 }}
           >
-            {t('footer.portfolio')}
+            Transform your GitHub profile into an interactive masterpiece
           </motion.p>
 
           <motion.div
             className='font-mono inline-block bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 border border-white/20 rounded-2xl px-10 py-6 backdrop-blur-xl shadow-2xl hover:shadow-purple-500/30 transition-all duration-500 hover:scale-105 cursor-pointer group'
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 3.1, duration: 0.8, type: 'spring' }}
+            transition={{ delay: 3.9, duration: 0.8, type: 'spring' }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -519,13 +669,15 @@ export default function HomePage() {
             className='mt-8 flex flex-wrap justify-center gap-6 text-sm'
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 3.3, duration: 0.8 }}
+            transition={{ delay: 4.1, duration: 0.8 }}
           >
             {[
-              { icon: '✅', text: t('footer.signup'), color: 'text-green-400' },
-              { icon: '💎', text: t('footer.free'), color: 'text-blue-400' },
-              { icon: '🔮', text: t('footer.magic'), color: 'text-purple-400' },
-              { icon: '⚡', text: t('footer.instant'), color: 'text-yellow-400' }
+              { icon: '🤖', text: 'AI-Powered', color: 'text-purple-400' },
+              { icon: '⚡', text: 'Real-time', color: 'text-yellow-400' },
+              { icon: '🎨', text: 'Interactive', color: 'text-pink-400' },
+              { icon: '🔬', text: 'Scientific', color: 'text-blue-400' },
+              { icon: '🌟', text: 'Revolutionary', color: 'text-orange-400' },
+              { icon: '🚀', text: 'Next-Gen', color: 'text-green-400' }
             ].map((item, index) => (
               <motion.div
                 key={item.text}
@@ -533,7 +685,7 @@ export default function HomePage() {
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{
-                  delay: 3.3 + index * 0.1,
+                  delay: 4.1 + index * 0.1,
                   duration: 0.5,
                   type: 'spring',
                   stiffness: 200
