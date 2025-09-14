@@ -15,6 +15,9 @@ interface Song {
   genre?: string;
   mood?: string;
   bpm?: number;
+  language?: string;
+  era?: string;
+  popularity?: number;
 }
 
 interface Playlist {
@@ -49,6 +52,7 @@ function MusicPlayer() {
   const [autoSimilar, setAutoSimilar] = useState(true);
   const [songDetailsCache, setSongDetailsCache] = useState<Record<string, any>>({});
   const [searchCache, setSearchCache] = useState<Record<string, Song[]>>({});
+  const [playedSongs, setPlayedSongs] = useState<Set<string>>(new Set());
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
@@ -56,86 +60,199 @@ function MusicPlayer() {
   // JioSaavn API base URL
   const API_BASE = 'https://saavn.dev';
 
-  // Infer genre, mood, bpm from song data
-  const inferMetadata = (song: Song) => {
+  // Professional music arrangement algorithm (like Spotify, JioSaavn)
+  const arrangeMusicLikePlatforms = useCallback((songs: Song[], currentSong: Song) => {
+    if (!songs.length) return songs;
+
+    // 1. Separate songs by genre/mood/language match quality
+    const perfectMatches = songs.filter(song =>
+      song.genre === currentSong.genre &&
+      song.language === currentSong.language &&
+      song.mood === currentSong.mood
+    );
+
+    const goodMatches = songs.filter(song =>
+      song.genre === currentSong.genre &&
+      song.language === currentSong.language &&
+      song.mood !== currentSong.mood
+    );
+
+    const decentMatches = songs.filter(song =>
+      (song.genre === currentSong.genre || song.language === currentSong.language) &&
+      !(song.genre === currentSong.genre && song.language === currentSong.language)
+    );
+
+    // 2. Shuffle within each category for randomness
+    const shuffleArray = (array: Song[]) => {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    };
+
+    // 3. Arrange like professional platforms:
+    // 70% perfect matches, 20% good matches, 10% decent matches
+    const arrangedSongs: Song[] = [];
+
+    // Add perfect matches (shuffled)
+    arrangedSongs.push(...shuffleArray(perfectMatches));
+
+    // Add good matches (shuffled, limited)
+    const goodMatchCount = Math.ceil(songs.length * 0.2);
+    arrangedSongs.push(...shuffleArray(goodMatches).slice(0, goodMatchCount));
+
+    // Add decent matches (shuffled, limited)
+    const decentMatchCount = Math.ceil(songs.length * 0.1);
+    arrangedSongs.push(...shuffleArray(decentMatches).slice(0, decentMatchCount));
+
+    // Remove duplicates and limit total
+    const uniqueArranged = arrangedSongs.filter((song, index, self) =>
+      index === self.findIndex(s => s.id === song.id)
+    );
+
+    return uniqueArranged.slice(0, 50); // Limit to 50 for performance
+  }, []);
+
+  // Infer genre, mood, bpm, language from song data (Spotify-like algorithm)
+  const inferMetadata = useCallback((song: Song) => {
     const name = song.name.toLowerCase();
     const artist = song.artist.toLowerCase();
     let genre = 'Bollywood';
     let mood = 'Neutral';
     let bpm = 90;
+    let language = 'Hindi';
+    let era = 'Modern';
+    let popularity = 50;
 
-    // Rap/Hip-Hop detection
-    if (name.includes('rap') || name.includes('hip hop') || name.includes('hip-hop') ||
-        name.includes('diss') || name.includes('track') || name.includes('beat') ||
-        name.includes('flow') || name.includes('bars') || name.includes('freestyle') ||
-        name.includes('cypher') || name.includes('spit') || name.includes('lyric') ||
-        name.includes('hook') || name.includes('verse') || name.includes('chorus') ||
-        artist.includes('eminem') || artist.includes('drake') || artist.includes('kanye') ||
-        artist.includes('jay-z') || artist.includes('nas') || artist.includes('snoop') ||
-        artist.includes('50 cent') || artist.includes('game') || artist.includes('ice cube') ||
-        artist.includes('tupac') || artist.includes('biggie') || artist.includes('notorious') ||
-        artist.includes('nicki') || artist.includes('cardi') || artist.includes('doja cat') ||
-        artist.includes('travis scott') || artist.includes('post malone') || artist.includes('lil wayne')) {
-      genre = 'Rap/Hip-Hop';
-      mood = 'Confident';
-      bpm = 95;
-    }
-    // Pop detection
-    else if (name.includes('pop') || name.includes('hit') || name.includes('chart') ||
-             artist.includes('justin') || artist.includes('taylor') || artist.includes('ariana') ||
-             artist.includes('billie') || artist.includes('olivia') || artist.includes('dua lipa') ||
-             artist.includes('harry') || artist.includes('adele')) {
-      genre = 'Pop';
-      mood = 'Upbeat';
-      bpm = 110;
-    }
-    // Rock detection
-    else if (name.includes('rock') || name.includes('metal') || name.includes('punk') ||
-             name.includes('guitar') || name.includes('band') ||
-             artist.includes('metallica') || artist.includes('ac/dc') || artist.includes('nirvana') ||
-             artist.includes('queen') || artist.includes('led zeppelin') || artist.includes('pink floyd')) {
-      genre = 'Rock';
-      mood = 'Energetic';
-      bpm = 130;
-    }
-    // Electronic/Dance detection
-    else if (name.includes('electronic') || name.includes('edm') || name.includes('house') ||
-             name.includes('techno') || name.includes('dubstep') || name.includes('remix') ||
-             artist.includes('avicii') || artist.includes('calvin harris') || artist.includes('david guetta') ||
-             artist.includes('skrillex') || artist.includes('marshmello')) {
-      genre = 'Electronic/Dance';
-      mood = 'Energetic';
-      bpm = 128;
-    }
-    // Bollywood specific detection
-    else if (name.includes('love') || name.includes('pyar') || name.includes('romantic') || name.includes('dil')) {
-      genre = 'Bollywood Romantic';
-      mood = 'Romantic';
-      bpm = 80;
-    } else if (name.includes('dance') || name.includes('party') || name.includes('dhoom') || name.includes('bhangra')) {
-      genre = 'Bollywood Dance';
-      mood = 'Energetic';
-      bpm = 120;
-    } else if (name.includes('sad') || name.includes('breakup') || name.includes('tear') || name.includes('gham')) {
-      genre = 'Bollywood Sad';
-      mood = 'Sad';
-      bpm = 70;
-    } else if (name.includes('happy') || name.includes('joy') || name.includes('khushi')) {
-      mood = 'Happy';
-      bpm = 100;
-    } else if (name.includes('chill') || name.includes('lofi') || name.includes('relax')) {
-      genre = 'Lo-fi';
-      mood = 'Chill';
-      bpm = 75;
+    // Language Detection (Primary factor for music platforms)
+    if (name.match(/[a-z]{3,}/g) && !name.includes('hindi') && !name.includes('bollywood')) {
+      // Check for English words/patterns
+      const englishWords = name.split(' ').filter(word =>
+        word.length > 2 && /^[a-z]+$/i.test(word) &&
+        !['hai', 'hai', 'ka', 'ki', 'ke', 'ko', 'se', 'me', 'ne', 'ho', 'ga', 'gi', 'ge'].includes(word)
+      );
+      if (englishWords.length > name.split(' ').length * 0.3) {
+        language = 'English';
+      }
     }
 
-    // Artist-based genre override
-    if (artist.includes('lata') || artist.includes('mohammed rafi') || artist.includes('kishore')) {
-      genre = 'Classic Bollywood';
+    // Artist-based language hints
+    if (artist.includes('eminem') || artist.includes('drake') || artist.includes('taylor') ||
+        artist.includes('justin') || artist.includes('ariana') || artist.includes('billie')) {
+      language = 'English';
     }
 
-    return { genre, mood, bpm };
-  };
+    // Era Detection
+    if (artist.includes('lata') || artist.includes('mohammed rafi') || artist.includes('kishore') ||
+        artist.includes('queen') || artist.includes('led zeppelin') || artist.includes('michael jackson')) {
+      era = 'Classic';
+      popularity = 90;
+    }
+
+    // Genre Detection with Language Context
+    if (language === 'English') {
+      // English Song Genres
+      if (name.includes('rap') || name.includes('hip hop') || name.includes('hip-hop') ||
+          name.includes('diss') || name.includes('track') || name.includes('beat') ||
+          name.includes('flow') || name.includes('bars') || name.includes('freestyle') ||
+          name.includes('cypher') || name.includes('spit') || name.includes('lyric') ||
+          name.includes('hook') || name.includes('verse') || name.includes('chorus') ||
+          artist.includes('eminem') || artist.includes('drake') || artist.includes('kanye') ||
+          artist.includes('jay-z') || artist.includes('nas') || artist.includes('snoop') ||
+          artist.includes('50 cent') || artist.includes('game') || artist.includes('ice cube') ||
+          artist.includes('tupac') || artist.includes('biggie') || artist.includes('notorious') ||
+          artist.includes('nicki') || artist.includes('cardi') || artist.includes('doja cat') ||
+          artist.includes('travis scott') || artist.includes('post malone') || artist.includes('lil wayne')) {
+        genre = 'Rap/Hip-Hop';
+        mood = 'Confident';
+        bpm = 95;
+        popularity = 85;
+      }
+      else if (name.includes('pop') || name.includes('hit') || name.includes('chart') ||
+               artist.includes('justin') || artist.includes('taylor') || artist.includes('ariana') ||
+               artist.includes('billie') || artist.includes('olivia') || artist.includes('dua lipa') ||
+               artist.includes('harry') || artist.includes('adele') || artist.includes('bruno mars')) {
+        genre = 'Pop';
+        mood = 'Upbeat';
+        bpm = 110;
+        popularity = 90;
+      }
+      else if (name.includes('rock') || name.includes('metal') || name.includes('punk') ||
+               name.includes('guitar') || name.includes('band') ||
+               artist.includes('metallica') || artist.includes('ac/dc') || artist.includes('nirvana') ||
+               artist.includes('queen') || artist.includes('led zeppelin') || artist.includes('pink floyd') ||
+               artist.includes('linkin park') || artist.includes('green day')) {
+        genre = 'Rock';
+        mood = 'Energetic';
+        bpm = 130;
+        popularity = 80;
+      }
+      else if (name.includes('electronic') || name.includes('edm') || name.includes('house') ||
+               name.includes('techno') || name.includes('dubstep') || name.includes('remix') ||
+               artist.includes('avicii') || artist.includes('calvin harris') || artist.includes('david guetta') ||
+               artist.includes('skrillex') || artist.includes('marshmello') || artist.includes('zedd')) {
+        genre = 'Electronic/Dance';
+        mood = 'Energetic';
+        bpm = 128;
+        popularity = 75;
+      }
+      else if (name.includes('love') || name.includes('heart') || name.includes('baby') ||
+               name.includes('kiss') || name.includes('romantic') || name.includes('forever')) {
+        genre = 'Pop';
+        mood = 'Romantic';
+        bpm = 100;
+      }
+      else if (name.includes('chill') || name.includes('lofi') || name.includes('relax') ||
+               name.includes('calm') || name.includes('peace')) {
+        genre = 'Lo-fi';
+        mood = 'Chill';
+        bpm = 75;
+        popularity = 70;
+      }
+    } else {
+      // Hindi/Indian Song Genres
+      if (name.includes('love') || name.includes('pyar') || name.includes('romantic') || name.includes('dil') ||
+          name.includes('ishq') || name.includes('mohabbat') || name.includes('prem')) {
+        genre = 'Bollywood Romantic';
+        mood = 'Romantic';
+        bpm = 80;
+        popularity = 85;
+      } else if (name.includes('dance') || name.includes('party') || name.includes('dhoom') ||
+                 name.includes('bhangra') || name.includes('dhol') || name.includes('garba')) {
+        genre = 'Bollywood Dance';
+        mood = 'Energetic';
+        bpm = 120;
+        popularity = 90;
+      } else if (name.includes('sad') || name.includes('breakup') || name.includes('tear') ||
+                 name.includes('gham') || name.includes('judai') || name.includes('dard')) {
+        genre = 'Bollywood Sad';
+        mood = 'Sad';
+        bpm = 70;
+        popularity = 75;
+      } else if (name.includes('happy') || name.includes('joy') || name.includes('khushi') ||
+                 name.includes('jashn') || name.includes('celebration')) {
+        genre = 'Bollywood';
+        mood = 'Happy';
+        bpm = 100;
+        popularity = 80;
+      } else if (name.includes('devotional') || name.includes('bhajan') || name.includes('spiritual') ||
+                 artist.includes('lata') || artist.includes('mohammed rafi') || artist.includes('kishore')) {
+        genre = 'Devotional';
+        mood = 'Spiritual';
+        bpm = 85;
+        popularity = 95;
+      } else if (name.includes('rap') || name.includes('hip hop') || artist.includes('badshah') ||
+                 artist.includes('raftaar') || artist.includes('honey singh')) {
+        genre = 'Indian Rap/Hip-Hop';
+        mood = 'Confident';
+        bpm = 95;
+        popularity = 85;
+      }
+    }
+
+    return { genre, mood, bpm, language, era, popularity };
+  }, []);
 
   // Find similar songs based on current song
   const findSimilarSongs = useCallback(async (song: Song) => {
@@ -147,63 +264,150 @@ function MusicPlayer() {
       // Base queries that work for all genres
       similarQueries.push(song.name); // Same song name (different versions)
 
-      // Genre-specific queries
-      if (song.genre) {
-        if (song.genre === 'Rap/Hip-Hop') {
+      // Spotify-like recommendation algorithm
+      if (song.genre && song.language) {
+        const lang = song.language.toLowerCase();
+        const genre = song.genre.toLowerCase();
+        const mood = song.mood?.toLowerCase() || 'popular';
+
+        // Language + Genre combination (most important for music platforms)
+        if (lang === 'english') {
+          if (genre.includes('rap') || genre.includes('hip-hop')) {
+            similarQueries.push(
+              'english rap songs',
+              'hip hop tracks english',
+              'english rap music',
+              'hip hop beats english',
+              'rap songs english',
+              'english hip hop',
+              'rap music english',
+              'hip hop english songs'
+            );
+          } else if (genre.includes('pop')) {
+            similarQueries.push(
+              'english pop songs',
+              'pop music english',
+              'english top hits',
+              'english pop chart',
+              'english popular songs',
+              'pop songs english',
+              'english chart hits'
+            );
+          } else if (genre.includes('rock')) {
+            similarQueries.push(
+              'english rock songs',
+              'rock music english',
+              'english rock band',
+              'guitar rock english',
+              'english classic rock',
+              'rock songs english'
+            );
+          } else if (genre.includes('electronic') || genre.includes('dance')) {
+            similarQueries.push(
+              'english electronic music',
+              'english dance music',
+              'english edm songs',
+              'electronic beats english',
+              'english club music',
+              'edm english'
+            );
+          } else if (genre.includes('lo-fi') || genre.includes('chill')) {
+            similarQueries.push(
+              'english lo-fi songs',
+              'chill music english',
+              'english lo-fi beats',
+              'english chill tracks',
+              'lo-fi english'
+            );
+          } else {
+            // Generic English songs
+            similarQueries.push(
+              'english songs',
+              'english music',
+              'english tracks',
+              'english hits',
+              'popular english songs'
+            );
+          }
+        } else if (lang === 'hindi' || lang.includes('hindi')) {
+          if (genre.includes('romantic')) {
+            similarQueries.push(
+              'hindi romantic songs',
+              'hindi love songs',
+              'romantic hindi music',
+              'hindi romantic tracks',
+              'love songs hindi',
+              'hindi dil songs'
+            );
+          } else if (genre.includes('dance')) {
+            similarQueries.push(
+              'hindi dance songs',
+              'bollywood dance music',
+              'hindi party songs',
+              'dance tracks hindi',
+              'bollywood dance hits'
+            );
+          } else if (genre.includes('sad')) {
+            similarQueries.push(
+              'hindi sad songs',
+              'sad hindi music',
+              'hindi breakup songs',
+              'emotional hindi songs',
+              'hindi sad tracks'
+            );
+          } else if (genre.includes('devotional')) {
+            similarQueries.push(
+              'hindi bhajans',
+              'devotional hindi songs',
+              'hindi spiritual music',
+              'bhajan hindi',
+              'hindi devotional tracks'
+            );
+          } else if (genre.includes('rap') || genre.includes('hip-hop')) {
+            similarQueries.push(
+              'hindi rap songs',
+              'indian hip hop',
+              'hindi rap music',
+              'indian rap tracks',
+              'bollywood rap'
+            );
+          } else {
+            // Generic Hindi/Bollywood songs
+            similarQueries.push(
+              'hindi songs',
+              'bollywood music',
+              'hindi tracks',
+              'indian songs',
+              'bollywood hits'
+            );
+          }
+        }
+
+        // Mood-based queries (secondary factor)
+        if (song.mood) {
           similarQueries.push(
-            'rap songs',
-            'hip hop tracks',
-            'rap music',
-            'hip hop beats',
-            'rap freestyle'
+            `${lang} ${mood} songs`,
+            `${mood} ${lang} music`,
+            `${lang} ${mood} tracks`
           );
-        } else if (song.genre === 'Pop') {
+        }
+
+        // Era-based queries (tertiary factor)
+        if (song.era) {
           similarQueries.push(
-            'pop songs',
-            'pop music',
-            'top hits',
-            'pop chart',
-            'popular songs'
-          );
-        } else if (song.genre === 'Rock') {
-          similarQueries.push(
-            'rock songs',
-            'rock music',
-            'rock band',
-            'guitar rock',
-            'classic rock'
-          );
-        } else if (song.genre === 'Electronic/Dance') {
-          similarQueries.push(
-            'electronic music',
-            'dance music',
-            'edm songs',
-            'electronic beats',
-            'club music'
-          );
-        } else if (song.genre.includes('Bollywood')) {
-          // Bollywood specific queries
-          similarQueries.push(
-            `${song.genre} songs`,
-            `${song.mood || 'popular'} bollywood songs`,
-            'bollywood music',
-            'indian songs',
-            'hindi songs'
-          );
-        } else {
-          // Fallback for other genres
-          similarQueries.push(
-            `${song.genre} songs`,
-            `${song.mood || 'popular'} songs`,
-            `${song.genre} music`
+            `${song.era} ${lang} songs`,
+            `${lang} ${song.era} music`,
+            `${song.era} ${genre} ${lang}`
           );
         }
       } else {
-        // Fallback when genre is undefined
+        // Fallback when metadata is incomplete
         similarQueries.push(
           'popular songs',
           'top hits',
-          'trending music'
+          'trending music',
+          'new music',
+          'latest songs'
         );
       }
 
@@ -220,7 +424,34 @@ function MusicPlayer() {
           const data = await response.json();
           if (data.success && data.data?.songs?.results) {
             const songs = data.data.songs.results
-              .filter((s: any) => s.id !== song.id && s.primaryArtists !== song.artist && s.album !== song.album) // Exclude current song, same artist, and same album
+              .filter((s: any) => {
+                // Spotify-like filtering: exclude current song but allow variety
+                if (s.id === song.id) return false;
+
+                // Create temp metadata for filtering
+                const tempSong = {
+                  id: s.id,
+                  name: s.title,
+                  artist: s.primaryArtists || 'Unknown Artist',
+                  album: s.album || 'Unknown Album',
+                  duration: 0,
+                  image: '',
+                  url: ''
+                };
+                const tempMetadata = inferMetadata(tempSong);
+
+                // Filter for genre/mood/language consistency (like professional platforms)
+                const genreMatch = !song.genre || tempMetadata.genre === song.genre ||
+                                 tempMetadata.genre?.toLowerCase().includes(song.genre.toLowerCase()) ||
+                                 song.genre.toLowerCase().includes(tempMetadata.genre?.toLowerCase() || '');
+
+                const languageMatch = !song.language || tempMetadata.language === song.language;
+
+                const moodMatch = !song.mood || tempMetadata.mood === song.mood ||
+                                Math.random() > 0.7; // 30% chance to include different mood for variety
+
+                return genreMatch && languageMatch && moodMatch;
+              })
               .slice(0, 12) // Limit to 12 per query
               .map((s: any) => {
                 const song = {
@@ -243,16 +474,19 @@ function MusicPlayer() {
         }
       }
 
-      // Remove duplicates and limit to 50 similar songs
+      // Remove duplicates first
       const uniqueSongs = similarSongs.filter((song, index, self) =>
         index === self.findIndex(s => s.id === song.id)
-      ).slice(0, 50);
+      );
 
-      return uniqueSongs;
+      // Arrange like professional music platforms (Spotify, JioSaavn style)
+      const arrangedSongs = arrangeMusicLikePlatforms(uniqueSongs, song);
+
+      return arrangedSongs;
     } catch (error) {
       return [];
     }
-  }, [API_BASE]);
+  }, [API_BASE, arrangeMusicLikePlatforms, inferMetadata]);
 
   // Auto-populate playlist with similar songs
   const autoPopulateSimilarSongs = useCallback(async () => {
@@ -455,6 +689,14 @@ function MusicPlayer() {
 
           // Add to recently played
           addToRecentlyPlayed(updatedSong);
+
+          // Add to played songs for no-repeat functionality
+          setPlayedSongs(prev => new Set(prev).add(updatedSong.id));
+
+          // Auto-populate similar songs if enabled
+          if (autoSimilar) {
+            autoPopulateSimilarSongs();
+          }
         } catch (playError) {
           throw playError;
         }
@@ -464,7 +706,7 @@ function MusicPlayer() {
     } finally {
       setIsLoading(false);
     }
-  }, [volume, API_BASE, songDetailsCache]);
+  }, [volume, API_BASE, songDetailsCache, inferMetadata, autoPopulateSimilarSongs, autoSimilar]);
 
   // Toggle play/pause
   const togglePlayPause = useCallback(async () => {
@@ -494,62 +736,56 @@ function MusicPlayer() {
   }, [currentQueue, playSong]);
 
   // Skip to next song
-   const nextSong = useCallback(async () => {
-     // If playlist is empty but queue has songs, play from queue
-     if (playlist.length === 0 && currentQueue.length > 0) {
-       playFromQueue(0);
-       return;
-     }
+  const nextSong = useCallback(async () => {
+    if (!currentSong) return;
 
-     if (playlist.length === 0) {
-       // If no playlist but we have a current song, find similar songs
-       if (currentSong) {
-         const similarSongs = await findSimilarSongs(currentSong);
-         if (similarSongs.length > 0) {
-           setPlaylist(similarSongs);
-           playSong(similarSongs[0]);
-           return;
-         }
-       }
-       return;
-     }
+    // If playlist is empty but queue has songs, play from queue
+    if (playlist.length === 0 && currentQueue.length > 0) {
+      playFromQueue(0);
+      return;
+    }
 
-    let nextIndex;
-    if (isShuffle) {
-      // Random song (excluding current if possible)
-      const availableIndices = playlist
-        .map((_, index) => index)
-        .filter(index => playlist[index].id !== currentSong?.id);
+    // Get available songs (not played yet)
+    let availableSongs = playlist.filter(song => !playedSongs.has(song.id));
 
-      if (availableIndices.length === 0) {
-        // If no other songs available, play random including current
-        nextIndex = Math.floor(Math.random() * playlist.length);
+    // If no available songs, find similar songs and reset played songs
+    if (availableSongs.length === 0) {
+      if (currentSong) {
+        const similarSongs = await findSimilarSongs(currentSong);
+        if (similarSongs.length > 0) {
+          // Filter out already played songs from new similar songs
+          const newSongs = similarSongs.filter(song => !playedSongs.has(song.id));
+          if (newSongs.length > 0) {
+            setPlaylist(newSongs);
+            availableSongs = newSongs;
+          } else {
+            // If all similar songs are played, reset played songs and use all similar songs
+            setPlayedSongs(new Set());
+            setPlaylist(similarSongs);
+            availableSongs = similarSongs;
+          }
+        } else {
+          return; // No similar songs found
+        }
       } else {
-        nextIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
-      }
-    } else {
-      // For normal mode, also use random to prevent looping
-      const availableIndices = playlist
-        .map((_, index) => index)
-        .filter(index => playlist[index].id !== currentSong?.id);
-
-      if (availableIndices.length === 0) {
-        // If no other songs available, play random including current
-        nextIndex = Math.floor(Math.random() * playlist.length);
-      } else {
-        nextIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+        return;
       }
     }
 
-    if (nextIndex >= 0 && nextIndex < playlist.length) {
-      playSong(playlist[nextIndex]);
+    // Arrange available songs by similarity to current song
+    const arrangedSongs = arrangeMusicLikePlatforms(availableSongs, currentSong);
+
+    // Select the best match (first in arranged list)
+    if (arrangedSongs.length > 0) {
+      const nextSongToPlay = arrangedSongs[0];
+      playSong(nextSongToPlay);
 
       // Auto-populate similar songs if enabled
       if (autoSimilar) {
         autoPopulateSimilarSongs();
       }
     }
-  }, [playlist, currentSong, playSong, isShuffle, currentQueue, playFromQueue, autoSimilar, autoPopulateSimilarSongs, findSimilarSongs]);
+  }, [playlist, currentSong, playSong, currentQueue, playFromQueue, autoSimilar, autoPopulateSimilarSongs, findSimilarSongs, playedSongs, arrangeMusicLikePlatforms]);
 
   // Skip to previous song
   const prevSong = useCallback(() => {
@@ -627,7 +863,10 @@ function MusicPlayer() {
   const addToPlaylist = (song: Song) => {
     setPlaylist(prev => {
       if (!prev.find(s => s.id === song.id)) {
-        const newPlaylist = [...prev, song];
+        // Infer metadata for the song
+        const metadata = inferMetadata(song);
+        const songWithMetadata = { ...song, ...metadata };
+        const newPlaylist = [...prev, songWithMetadata];
         return newPlaylist;
       }
       return prev;
