@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AssessmentQuestion {
@@ -29,6 +29,26 @@ interface AssessmentResult {
 interface InteractiveSkillAssessmentPlatformProps {
   username: string;
 }
+const generateRecommendations = (skill: string, score: number, level: string): string[] => {
+  const recommendations = [];
+
+  if (score < 60) {
+    recommendations.push(`Focus on ${skill} fundamentals and basic concepts`);
+    recommendations.push('Practice with beginner-friendly coding challenges');
+    recommendations.push(`Take ${skill} courses on platforms like freeCodeCamp or Codecademy`);
+  } else if (score < 80) {
+    recommendations.push(`Strengthen your ${skill} intermediate concepts`);
+    recommendations.push('Work on real-world projects to apply your knowledge');
+    recommendations.push(`Study ${skill} design patterns and best practices`);
+  } else {
+    recommendations.push(`You're proficient in ${skill}! Focus on advanced topics`);
+    recommendations.push('Contribute to open source projects');
+    recommendations.push(`Consider specializing in ${skill} frameworks or tools`);
+  }
+
+  return recommendations;
+};
+
 
 export default function InteractiveSkillAssessmentPlatform({ username }: InteractiveSkillAssessmentPlatformProps) {
   const [selectedSkill, setSelectedSkill] = useState<string>('');
@@ -44,23 +64,6 @@ export default function InteractiveSkillAssessmentPlatform({ username }: Interac
     'JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'SQL',
     'Git', 'Docker', 'AWS', 'System Design', 'Algorithms', 'Data Structures'
   ];
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isAssessing && timeRemaining > 0) {
-      timer = setInterval(() => {
-        setTimeRemaining(prev => {
-          if (prev <= 1) {
-            // Auto-submit when time runs out
-            handleSubmitAssessment();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [isAssessing, timeRemaining]);
 
   const startAssessment = async (skill: string) => {
     setIsAssessing(true);
@@ -206,7 +209,7 @@ export default Counter;`,
     }
   };
 
-  const handleSubmitAssessment = () => {
+  const handleSubmitAssessment = useCallback(() => {
     const endTime = Date.now();
     const timeTaken = (endTime - assessmentStartTime) / 1000; // in seconds
 
@@ -248,27 +251,8 @@ export default Counter;`,
 
     setAssessmentResult(result);
     setIsAssessing(false);
-  };
+  }, [currentAssessment, userAnswers, assessmentStartTime, selectedSkill]);
 
-  const generateRecommendations = (skill: string, score: number, level: string): string[] => {
-    const recommendations = [];
-
-    if (score < 60) {
-      recommendations.push(`Focus on ${skill} fundamentals and basic concepts`);
-      recommendations.push('Practice with beginner-friendly coding challenges');
-      recommendations.push(`Take ${skill} courses on platforms like freeCodeCamp or Codecademy`);
-    } else if (score < 80) {
-      recommendations.push(`Strengthen your ${skill} intermediate concepts`);
-      recommendations.push('Work on real-world projects to apply your knowledge');
-      recommendations.push(`Study ${skill} design patterns and best practices`);
-    } else {
-      recommendations.push(`You're proficient in ${skill}! Focus on advanced topics`);
-      recommendations.push('Contribute to open source projects');
-      recommendations.push(`Consider specializing in ${skill} frameworks or tools`);
-    }
-
-    return recommendations;
-  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -278,6 +262,23 @@ export default Counter;`,
 
   const currentQuestion = currentAssessment[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / currentAssessment.length) * 100;
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isAssessing && timeRemaining > 0) {
+      timer = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            // Auto-submit when time runs out
+            handleSubmitAssessment();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isAssessing, timeRemaining, handleSubmitAssessment]);
 
   return (
     <motion.div
