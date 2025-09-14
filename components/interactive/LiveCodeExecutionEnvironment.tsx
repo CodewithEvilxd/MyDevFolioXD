@@ -41,16 +41,16 @@ function fibonacci(n) {
   return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
-console.log('Fibonacci of 10:', fibonacci(10));
+
 
 // Array operations
 const numbers = [1, 2, 3, 4, 5];
 const doubled = numbers.map(n => n * 2);
-console.log('Doubled numbers:', doubled);
+
 
 // Object manipulation
 const user = { name: 'John', age: 30 };
-console.log('User:', user);`,
+`,
 
   typescript: `// Sample TypeScript Code
 interface User {
@@ -68,15 +68,15 @@ function greetUser(user: User): string {
 }
 
 const user = createUser('Alice', 25);
-console.log(greetUser(user));
+
 
 // Generic function
 function identity<T>(arg: T): T {
   return arg;
 }
 
-console.log(identity<string>('Hello TypeScript'));
-console.log(identity<number>(42));`,
+
+`,
 
   python: `# Sample Python Code
 def fibonacci(n):
@@ -455,7 +455,7 @@ export default function LiveCodeExecutionEnvironment({
       try {
         setSavedSnippets(JSON.parse(saved));
       } catch (error) {
-        console.error('Error loading saved snippets:', error);
+        
       }
     }
   }, [username]);

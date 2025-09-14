@@ -121,7 +121,7 @@ export default function InteractiveSkillAssessmentPlatform({ username }: Interac
     const data = response.json();
     return data;
   } catch (error) {
-    console.error('Error fetching user:', error);
+    
   }
 }`,
           correct_answer: 'Add await before response.json()',

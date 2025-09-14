@@ -82,18 +82,18 @@ export default function AICodeDreamGenerator({ username, repos }: AICodeDreamGen
       const aiResponse = await generateDreamProjects(codingStyle, repos.slice(0, 5));
 
       if (aiResponse.success) {
-        console.log('AI Dream Generator response received, length:', aiResponse.content.length);
+        
 
         // Validate that the response looks like JSON
         const content = aiResponse.content.trim();
         if (!content.startsWith('[') && !content.startsWith('{')) {
-          console.warn('AI dream response does not appear to be JSON, using fallback. Response starts with:', content.substring(0, 100));
+          
           const dreams = await generateFallbackProjects(codingStyle);
           setDreamProjects(dreams);
         } else {
           try {
             const dreams = JSON.parse(content);
-            console.log('Successfully parsed AI dream projects:', dreams.length);
+            
 
             if (Array.isArray(dreams) && dreams.length > 0) {
               // Validate the structure of the first dream
@@ -111,24 +111,24 @@ export default function AICodeDreamGenerator({ username, repos }: AICodeDreamGen
                   innovation: dream.innovation || 'Innovative approach'
                 })));
               } else {
-                console.warn('AI dream response structure is invalid, using fallback');
+                
                 const dreams = await generateFallbackProjects(codingStyle);
                 setDreamProjects(dreams);
               }
             } else {
-              console.warn('AI dream response is not a valid array or is empty, using fallback');
+              
               const dreams = await generateFallbackProjects(codingStyle);
               setDreamProjects(dreams);
             }
           } catch (parseError) {
-            console.warn('AI dream response parsing failed, using fallback. Error:', parseError);
-            console.warn('Raw AI dream response:', content.substring(0, 500));
+            
+            
             const dreams = await generateFallbackProjects(codingStyle);
             setDreamProjects(dreams);
           }
         }
       } else {
-        console.warn('AI dream response was not successful:', aiResponse.error);
+        
         // Fallback to pattern-based generation if AI fails
         const dreams = await generateFallbackProjects(codingStyle);
         setDreamProjects(dreams);
@@ -385,7 +385,7 @@ const ${username}Project = {
   topics: ${JSON.stringify(userTopics)},
 
   async initialize() {
-    console.log('Initializing with your tech stack...');
+    
     // Project initialization with your preferences
   },
 

@@ -63,7 +63,7 @@ export default function OpenSourceContributionMap({ username, repos }: OpenSourc
         const eventsRes = await fetch(`https://api.github.com/users/${username}/events?per_page=100`, { headers });
         if (!eventsRes.ok) {
           if (eventsRes.status === 404) {
-            console.log(`User ${username} not found or has no public events`);
+            
             setContributions([]);
             setOrganizations([]);
             setStats(null);
@@ -78,7 +78,7 @@ export default function OpenSourceContributionMap({ username, repos }: OpenSourc
         try {
           const responseText = await eventsRes.text();
           if (responseText.trim() === '') {
-            console.log(`Empty response for user events`);
+            
             setContributions([]);
             setOrganizations([]);
             setStats(null);
@@ -88,7 +88,7 @@ export default function OpenSourceContributionMap({ username, repos }: OpenSourc
           }
           events = JSON.parse(responseText);
         } catch (parseError) {
-          console.error(`Failed to parse events JSON:`, parseError);
+          
           setContributions([]);
           setOrganizations([]);
           setStats(null);
@@ -98,7 +98,7 @@ export default function OpenSourceContributionMap({ username, repos }: OpenSourc
         }
 
         if (!Array.isArray(events)) {
-          console.error(`Events data is not an array`);
+          
           setContributions([]);
           setOrganizations([]);
           setStats(null);
@@ -159,22 +159,22 @@ export default function OpenSourceContributionMap({ username, repos }: OpenSourc
               try {
                 const responseText = await repoRes.text();
                 if (responseText.trim() === '') {
-                  console.log(`Empty response for repo ${repoFull}`);
+                  
                   continue;
                 }
                 repoData = JSON.parse(responseText);
               } catch (parseError) {
-                console.error(`Failed to parse repo data for ${repoFull}:`, parseError);
+                
                 continue;
               }
               repoDetails.set(repoFull, { language: repoData.language || 'Unknown', stars: repoData.stargazers_count || 0 });
             } else if (repoRes.status === 404) {
-              console.log(`Repository ${repoFull} not found`);
+              
             } else {
-              console.log(`Failed to fetch repo ${repoFull}: ${repoRes.status}`);
+              
             }
           } catch (e) {
-            console.log(`Error fetching repo ${repoFull}:`, e);
+            
           }
         }
 
@@ -224,7 +224,7 @@ export default function OpenSourceContributionMap({ username, repos }: OpenSourc
         setOrganizations(organizations);
         setStats(stats);
       } catch (error) {
-        console.error('Error analyzing contributions:', error);
+        
         // Fallback to empty
         setContributions([]);
         setOrganizations([]);

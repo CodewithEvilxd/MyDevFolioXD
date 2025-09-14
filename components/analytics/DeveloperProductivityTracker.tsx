@@ -163,7 +163,7 @@ export default function DeveloperProductivityTracker({ username, repos }: Develo
                      '';
 
         setHasToken(!!token);
-        console.log('Using GitHub token for productivity analysis:', token ? 'Available' : 'Not available');
+        
 
         // Fetch commits from user's repositories
         const allCommits: any[] = [];
@@ -193,7 +193,7 @@ export default function DeveloperProductivityTracker({ username, repos }: Develo
                 headers['Authorization'] = `token ${token}`;
               }
 
-              console.log(`Fetching commits for ${username}/${repo.name} from ${apiStartDate.toISOString()} to ${apiEndDate.toISOString()}`);
+              
 
               const response = await fetch(
                 `https://api.github.com/repos/${username}/${repo.name}/commits?since=${apiStartDate.toISOString()}&until=${apiEndDate.toISOString()}&per_page=50&author=${username}`,
@@ -202,7 +202,7 @@ export default function DeveloperProductivityTracker({ username, repos }: Develo
 
               if (response.ok) {
                 const commits = await response.json();
-                console.log(`Found ${commits.length} commits for ${repo.name}`);
+                
 
                 return commits
                   .filter((commit: any) => {
@@ -216,18 +216,18 @@ export default function DeveloperProductivityTracker({ username, repos }: Develo
                   }));
               } else if (response.status === 409) {
                 // Repository is empty or has no commits in the date range
-                console.warn(`No commits found for ${repo.name} in the specified date range`);
+                
                 return [];
               } else if (response.status === 404) {
                 // Repository not found or access denied
-                console.warn(`Repository ${repo.name} not found or access denied`);
+                
                 return [];
               } else {
-                console.warn(`Failed to fetch commits for ${repo.name}: ${response.status} ${response.statusText}`);
+                
                 return [];
               }
             } catch (error) {
-              console.error(`Error fetching commits for ${repo.name}:`, error);
+              
               return [];
             }
           });
@@ -241,11 +241,11 @@ export default function DeveloperProductivityTracker({ username, repos }: Develo
           }
         }
 
-        console.log(`Total commits fetched: ${allCommits.length}`);
+        
 
         // If no real commits found, generate sample data
         if (allCommits.length === 0) {
-          console.log('No real commit data found, generating enhanced sample productivity data');
+          
           const sampleData = generateEnhancedSampleProductivityData(days, startDate);
           setProductivityData(sampleData.productivityData);
           setStats(sampleData.stats);
@@ -344,7 +344,7 @@ export default function DeveloperProductivityTracker({ username, repos }: Develo
         setStats(realStats);
 
       } catch (error) {
-        console.error('Error fetching productivity data:', error);
+        
         // Fallback to empty data
         setProductivityData([]);
         setStats({

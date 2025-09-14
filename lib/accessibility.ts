@@ -279,7 +279,7 @@ export const accessibilityErrorHandler = {
   // Handle accessibility violations
   onViolation: (violations: any[]): void => {
     violations.forEach(violation => {
-      console.warn('Accessibility violation:', violation);
+      
       screenReader.announce(`Accessibility issue: ${violation.description}`, 'assertive');
     });
   },
@@ -307,7 +307,7 @@ export const accessibilityErrorHandler = {
     });
 
     if (issues.length > 0) {
-      console.warn('Accessibility issues found:', issues);
+      
     }
   }
 };

@@ -75,7 +75,7 @@ export default function AboutMeWithReadme({
           setReadmeContent(null);
         }
       } catch (error) {
-        console.error('Error fetching profile README:', error);
+        
         setReadmeContent(null);
       } finally {
         setLoading(false);
@@ -377,3 +377,4 @@ export default function AboutMeWithReadme({
     </div>
   );
 }
+

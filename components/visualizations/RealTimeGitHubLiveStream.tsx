@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { createGitHubHeaders } from '@/lib/githubToken';
 
 interface GitHubEvent {
@@ -34,20 +35,59 @@ export default function RealTimeGitHubLiveStream({ username }: RealTimeGitHubLiv
     popularRepos: [] as string[]
   });
 
-  useEffect(() => {
-    if (isStreaming) {
-      startLiveStream();
-    } else {
-      stopLiveStream();
-    }
-
-    return () => stopLiveStream();
-  }, [isStreaming, username]);
-
-  const startLiveStream = async () => {
+  const startLiveStream = useCallback(async () => {
     setConnectionStatus('connecting');
 
     try {
+      const generateLiveEvent = () => {
+        const eventTypes = ['WatchEvent', 'ForkEvent', 'IssuesEvent', 'PullRequestEvent', 'PushEvent', 'CreateEvent'];
+        const randomType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+
+        const mockUsers = [
+          'octocat', 'torvalds', 'gaearon', 'tj', 'sindresorhus', 'addyosmani',
+          'paulirish', 'getify', 'btholt', 'kentcdodds', 'sophiebits', 'sebmarkbage'
+        ];
+
+        const mockRepos = [
+          `${username}/portfolio-project`,
+          `${username}/react-components`,
+          `${username}/api-wrapper`,
+          `${username}/data-visualizer`,
+          `${username}/cli-tool`,
+          `${username}/mobile-app`
+        ];
+
+        const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)];
+        const randomRepo = mockRepos[Math.floor(Math.random() * mockRepos.length)];
+
+        const newEvent: GitHubEvent = {
+          id: `event_${Date.now()}_${Math.random()}`,
+          type: randomType as any,
+          actor: {
+            login: randomUser,
+            avatar_url: `https://avatars.githubusercontent.com/${randomUser}`
+          },
+          repo: {
+            name: randomRepo,
+            url: `https://github.com/${randomRepo}`
+          },
+          payload: {
+            action: randomType === 'IssuesEvent' ? 'opened' : randomType === 'PullRequestEvent' ? 'opened' : undefined
+          },
+          created_at: new Date().toISOString(),
+          isLive: true
+        };
+
+        setEvents(prev => [newEvent, ...prev.slice(0, 49)]); // Keep last 50 events
+
+        // Update stats
+        setStats(prev => ({
+          totalEvents: prev.totalEvents + 1,
+          uniqueUsers: new Set([...Array.from({ length: prev.totalEvents }, (_, i) => `user${i}`), randomUser]).size,
+          popularRepos: Array.from(new Set([randomRepo, ...prev.popularRepos.slice(0, 4)]))
+        }));
+      };
+
       // Simulate connecting to GitHub events
       await new Promise(resolve => setTimeout(resolve, 1000));
       setConnectionStatus('connected');
@@ -66,66 +106,27 @@ export default function RealTimeGitHubLiveStream({ username }: RealTimeGitHubLiv
       }
 
     } catch (error) {
-      console.error('Failed to start live stream:', error);
       setConnectionStatus('disconnected');
     }
-  };
+  }, [username]);
 
-  const stopLiveStream = () => {
+  const stopLiveStream = useCallback(() => {
     setConnectionStatus('disconnected');
     if ((window as any).liveStreamInterval) {
       clearInterval((window as any).liveStreamInterval);
     }
-  };
+  }, []);
 
-  const generateLiveEvent = () => {
-    const eventTypes = ['WatchEvent', 'ForkEvent', 'IssuesEvent', 'PullRequestEvent', 'PushEvent', 'CreateEvent'];
-    const randomType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+  useEffect(() => {
+    if (isStreaming) {
+      startLiveStream();
+    } else {
+      stopLiveStream();
+    }
 
-    const mockUsers = [
-      'octocat', 'torvalds', 'gaearon', 'tj', 'sindresorhus', 'addyosmani',
-      'paulirish', 'getify', 'btholt', 'kentcdodds', 'sophiebits', 'sebmarkbage'
-    ];
+    return () => stopLiveStream();
+  }, [isStreaming, username, startLiveStream, stopLiveStream]);
 
-    const mockRepos = [
-      `${username}/portfolio-project`,
-      `${username}/react-components`,
-      `${username}/api-wrapper`,
-      `${username}/data-visualizer`,
-      `${username}/cli-tool`,
-      `${username}/mobile-app`
-    ];
-
-    const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)];
-    const randomRepo = mockRepos[Math.floor(Math.random() * mockRepos.length)];
-
-    const newEvent: GitHubEvent = {
-      id: `event_${Date.now()}_${Math.random()}`,
-      type: randomType as any,
-      actor: {
-        login: randomUser,
-        avatar_url: `https://avatars.githubusercontent.com/${randomUser}`
-      },
-      repo: {
-        name: randomRepo,
-        url: `https://github.com/${randomRepo}`
-      },
-      payload: {
-        action: randomType === 'IssuesEvent' ? 'opened' : randomType === 'PullRequestEvent' ? 'opened' : undefined
-      },
-      created_at: new Date().toISOString(),
-      isLive: true
-    };
-
-    setEvents(prev => [newEvent, ...prev.slice(0, 49)]); // Keep last 50 events
-
-    // Update stats
-    setStats(prev => ({
-      totalEvents: prev.totalEvents + 1,
-      uniqueUsers: new Set([...Array.from({ length: prev.totalEvents }, (_, i) => `user${i}`), randomUser]).size,
-      popularRepos: Array.from(new Set([randomRepo, ...prev.popularRepos.slice(0, 4)]))
-    }));
-  };
 
   const getEventIcon = (type: string) => {
     switch (type) {
@@ -263,9 +264,11 @@ export default function RealTimeGitHubLiveStream({ username }: RealTimeGitHubLiv
               whileHover={{ scale: 1.02 }}
             >
               {/* User Avatar */}
-              <img
+              <Image
                 src={event.actor.avatar_url}
                 alt={event.actor.login}
+                width={40}
+                height={40}
                 className='w-10 h-10 rounded-full border-2 border-[var(--primary)]'
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${event.actor.login}&background=random`;

@@ -162,7 +162,7 @@ export default function InterviewPreparationModule({
 
       setQuestions(filteredQuestions);
     } catch (error) {
-      console.error('Error generating interview questions:', error);
+      
       // Fallback questions
       setQuestions([
         {

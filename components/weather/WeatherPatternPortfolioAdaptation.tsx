@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Repository } from '@/types';
 
@@ -48,7 +48,6 @@ export default function WeatherPatternPortfolioAdaptation({ username, repos }: W
           });
         },
         (error) => {
-          console.log('Geolocation not available, using default location');
           // Default to a major city if geolocation fails
           setLocation({ lat: 40.7128, lon: -74.0060 }); // New York
         }
@@ -57,14 +56,7 @@ export default function WeatherPatternPortfolioAdaptation({ username, repos }: W
       setLocation({ lat: 40.7128, lon: -74.0060 });
     }
   }, []);
-
-  useEffect(() => {
-    if (location) {
-      fetchWeatherData();
-    }
-  }, [location]);
-
-  const fetchWeatherData = async () => {
+  const fetchWeatherData = useCallback(async () => {
     if (!location) return;
 
     try {
@@ -93,14 +85,21 @@ export default function WeatherPatternPortfolioAdaptation({ username, repos }: W
         setPortfolioMood(generatePortfolioMood(fallbackWeather, repos));
       }
     } catch (error) {
-      console.log('Weather API not available, using fallback');
+      console.error('Error fetching weather data:', error);
       const fallbackWeather = generateFallbackWeather();
       setWeather(fallbackWeather);
       setPortfolioMood(generatePortfolioMood(fallbackWeather, repos));
     } finally {
       setLoading(false);
     }
-  };
+  }, [location, repos]);
+
+  useEffect(() => {
+    if (location) {
+      fetchWeatherData();
+    }
+  }, [location, fetchWeatherData]);
+
 
   const getWeatherEmoji = (condition: string): string => {
     const lowerCondition = condition.toLowerCase();

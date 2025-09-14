@@ -33,18 +33,18 @@ const LANGUAGES = [
 const SAMPLE_CODE = {
   javascript: `// Hello World in JavaScript
 function greet(name) {
-  console.log(\`Hello, \${name}!\`);
+  
   return \`Welcome to MyDevFolioXD!\`;
 }
 
 // Example usage
 const result = greet("Developer");
-console.log(result);
+
 
 // Array operations
 const skills = ['JavaScript', 'React', 'Node.js'];
 const newSkills = skills.map(skill => skill.toUpperCase());
-console.log(newSkills);`,
+`,
 
   typescript: `// TypeScript Hello World
 interface User {
@@ -76,8 +76,8 @@ const dev = new Developer(
   5
 );
 
-console.log(dev.introduce());
-console.log("Top skills:", dev.getTopSkills());`,
+
+`,
 
   python: `# Python Hello World
 def calculate_fibonacci(n: int) -> list[int]:

@@ -61,7 +61,6 @@ export async function GET(request: NextRequest) {
       resources: data.resources,
     });
   } catch (error) {
-    console.error('Error checking rate limit:', error);
     return NextResponse.json(
       { error: 'Failed to check GitHub rate limit' },
       { status: 500 }

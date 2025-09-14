@@ -141,7 +141,7 @@ export default function GitHubStreakCounter({ username }: GitHubStreakCounterPro
         setLongestStreak(longestStreak);
 
       } catch (error) {
-        console.error('Failed to calculate streaks:', error);
+        
         // Fallback to 0 if API fails
         setCurrentStreak(0);
         setLongestStreak(0);

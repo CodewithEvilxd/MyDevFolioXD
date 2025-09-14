@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, ScatterChart, Scatter } from 'recharts';
 import { getGitHubToken } from '@/lib/githubToken';
+import Image from 'next/image';
 
 interface Collaborator {
   id: string;
@@ -83,7 +84,6 @@ export default function ProjectCollaborationInsights({ username, repos }: Projec
                      getGitHubToken();
 
         setHasToken(!!token);
-        console.log('Using GitHub token for collaboration analysis:', token ? 'Available' : 'Not available');
 
         for (const repo of repos.slice(0, 15)) { // Increased limit for better analysis
           try {
@@ -96,7 +96,6 @@ export default function ProjectCollaborationInsights({ username, repos }: Projec
               headers['Authorization'] = `token ${token}`;
             }
 
-            console.log(`Fetching contributors for ${username}/${repo.name}`);
 
             const response = await fetch(
               `https://api.github.com/repos/${username}/${repo.name}/contributors?per_page=20&anon=1`,
@@ -108,16 +107,13 @@ export default function ProjectCollaborationInsights({ username, repos }: Projec
               try {
                 contributors = await response.json();
               } catch (parseError) {
-                console.error(`Failed to parse contributors JSON for ${repo.name}:`, parseError);
                 continue;
               }
 
               if (!Array.isArray(contributors)) {
-                console.error(`Contributors data is not an array for ${repo.name}`);
                 continue;
               }
 
-              console.log(`Found ${contributors.length} contributors for ${repo.name}`);
 
               const projectCollaborators: Collaborator[] = contributors
                 .filter((contributor: any) => {
@@ -194,18 +190,13 @@ export default function ProjectCollaborationInsights({ username, repos }: Projec
                   mergeSuccessRate: Math.max(75, Math.min(95, 85 + (avgContributions * 0.1)))
                 });
 
-                console.log(`Added collaboration data for ${repo.name}: ${projectCollaborators.length} collaborators, score: ${collaborationScore}`);
               } else {
-                console.log(`No collaborators found for ${repo.name} (excluding owner)`);
               }
             } else {
-              console.warn(`Failed to fetch contributors for ${repo.name}: ${response.status} ${response.statusText}`);
               if (response.status === 403) {
-                console.warn('Rate limit or authentication issue');
               }
             }
           } catch (error) {
-            console.error(`Error fetching contributors for ${repo.name}:`, error);
           }
 
           // Small delay to avoid rate limits
@@ -214,7 +205,6 @@ export default function ProjectCollaborationInsights({ username, repos }: Projec
 
         // Calculate final stats
         if (realCollaborations.length === 0) {
-          console.log('No real collaboration data found, generating enhanced sample data');
           const sampleData = generateSampleCollaborationData();
           setCollaborations(sampleData.collaborations);
           setStats(sampleData.stats);
@@ -255,13 +245,11 @@ export default function ProjectCollaborationInsights({ username, repos }: Projec
             codeReviewEfficiency: Math.max(65, Math.min(95, 75 + (totalContributions * 0.01) + (totalProjects * 1)))
           };
 
-          console.log('Real collaboration stats calculated:', realStats);
           setCollaborations(realCollaborations);
           setStats(realStats);
         }
 
       } catch (error) {
-        console.error('Error analyzing collaborations:', error);
         // Fallback to sample data on error
         const sampleData = generateSampleCollaborationData();
         setCollaborations(sampleData.collaborations);
@@ -859,9 +847,11 @@ export default function ProjectCollaborationInsights({ username, repos }: Projec
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
               >
-                <img
+                <Image
                   src={collaborator.avatar_url}
                   alt={collaborator.username}
+                  width={40}
+                  height={40}
                   className='w-10 h-10 rounded-full'
                 />
                 <div className='flex-1'>

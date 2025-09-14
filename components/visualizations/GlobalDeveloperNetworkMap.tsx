@@ -219,7 +219,7 @@ export default function GlobalDeveloperNetworkMap({ username, repos }: GlobalDev
       setDevelopers(developers);
       setConnections(connections);
     } catch (error) {
-      console.error('Error fetching network data:', error);
+      
       // Fallback to mock data if API fails
       const mockDevelopers: DeveloperNode[] = [
         {

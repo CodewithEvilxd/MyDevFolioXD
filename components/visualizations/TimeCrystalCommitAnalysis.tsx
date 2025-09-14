@@ -115,7 +115,6 @@ export default function TimeCrystalCommitAnalysis({ username }: TimeCrystalCommi
         setTimeCrystals(crystals);
 
       } catch (error) {
-        console.error('Error analyzing time crystals:', error);
       } finally {
         setLoading(false);
       }

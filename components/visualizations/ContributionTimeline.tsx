@@ -70,7 +70,7 @@ export default function ContributionTimeline({ username }: ContributionTimelineP
         });
 
         if (!response.ok) {
-          console.warn('GitHub API failed for timeline');
+          
           setContributions([]);
           return;
         }
@@ -78,7 +78,7 @@ export default function ContributionTimeline({ username }: ContributionTimelineP
         const data = await response.json();
 
         if (data.errors) {
-          console.warn('GraphQL errors for timeline');
+          
           setContributions([]);
           return;
         }
@@ -104,7 +104,7 @@ export default function ContributionTimeline({ username }: ContributionTimelineP
 
         setContributions(timeline);
       } catch (error) {
-        console.error('Error fetching contribution timeline:', error);
+        
         setContributions([]);
       } finally {
         setLoading(false);

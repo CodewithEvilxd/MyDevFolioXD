@@ -94,7 +94,7 @@ export default function GitHubProfileComparison({ username, repos }: GitHubProfi
       setUser2(mockUser2);
       calculateComparison(user1!, mockUser2);
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      
     } finally {
       setLoading(false);
     }

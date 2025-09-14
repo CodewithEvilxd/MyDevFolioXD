@@ -128,7 +128,7 @@ export default function ContributionGraph({
           totalContributions,
         });
       } catch (error) {
-        console.error('Error fetching contributions:', error);
+        
         setError('Failed to load contribution data');
       } finally {
         setLoading(false);
@@ -288,3 +288,4 @@ export default function ContributionGraph({
     </div>
   );
 }
+

@@ -46,7 +46,7 @@ export default function GitHubAuth({ onTokenChange }: GitHubAuthProps) {
         tokenSource: data.tokenSource,
       });
     } catch (error) {
-      console.error('Error checking rate limit:', error);
+      
     }
   };
 
@@ -73,7 +73,7 @@ export default function GitHubAuth({ onTokenChange }: GitHubAuthProps) {
         alert('Invalid token or insufficient permissions');
       }
     } catch (error) {
-      console.error('Authentication error:', error);
+      
       alert('Failed to authenticate with GitHub');
     } finally {
       setLoading(false);
@@ -170,3 +170,4 @@ export default function GitHubAuth({ onTokenChange }: GitHubAuthProps) {
     </div>
   );
 }
+

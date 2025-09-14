@@ -124,7 +124,6 @@ export default function ProjectDetailsPage() {
             setReadme(decodedContent);
           }
         } catch (error) {
-          console.error('Error fetching README:', error);
         }
 
         // Commented out fetching logic for MyDevFolioXD.md to improve load time
@@ -152,7 +151,6 @@ export default function ProjectDetailsPage() {
             }
             return false;
           } catch (error) {
-            console.error(`Error fetching ${path}:`, error);
             return false;
           }
         };
@@ -188,7 +186,6 @@ export default function ProjectDetailsPage() {
             setContributors(contributorsData);
           }
         } catch (error) {
-          console.error('Error fetching contributors:', error);
         }
 
         // Fetch languages
@@ -202,7 +199,6 @@ export default function ProjectDetailsPage() {
             setLanguages(languagesData);
           }
         } catch (error) {
-          console.error('Error fetching languages:', error);
         }
       } catch (error) {
         if (error instanceof Error) {
@@ -290,7 +286,7 @@ export default function ProjectDetailsPage() {
           Loading project...
         </h2>
         <p className='text-[var(--text-secondary)] max-w-md text-center'>
-          We're fetching project details from GitHub.
+          We&apos;re fetching project details from GitHub.
         </p>
       </div>
     );
@@ -328,6 +324,79 @@ export default function ProjectDetailsPage() {
       </div>
     );
   }
+  const CustomPre = ({ node, ...props }: any) => {
+    const [isCodeCopied, setIsCodeCopied] = useState(false);
+    const preRef = React.useRef<HTMLPreElement>(null);
+
+    const copyToClipboard = () => {
+      if (preRef.current) {
+        const codeElement = preRef.current.querySelector('code');
+        const textToCopy = codeElement?.textContent || '';
+        navigator.clipboard.writeText(textToCopy);
+        setIsCodeCopied(true);
+        setTimeout(() => setIsCodeCopied(false), 2000);
+      }
+    };
+
+    return (
+      <div className='relative group'>
+        <pre
+          {...props}
+          ref={preRef}
+          className='bg-[#1a1a1a] dark:bg-[#0d1117] p-4 rounded-md overflow-x-auto text-sm my-4'
+        />
+        <button
+          onClick={copyToClipboard}
+          className='absolute top-2 right-2 bg-[var(--card-border)] hover:bg-[var(--primary)] p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity'
+          title='Copy code'
+          aria-label='Copy code to clipboard'
+        >
+          {isCodeCopied ? (
+            <>
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                width='16'
+                height='16'
+                viewBox='0 0 24 24'
+                fill='none'
+                stroke='currentColor'
+                strokeWidth='2'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+              >
+                <polyline points='20 6 9 17 4 12'></polyline>
+              </svg>
+              <span className='absolute -bottom-8 right-0 bg-[var(--card-bg)] text-white text-xs py-1 px-2 rounded'>
+                Copied!
+              </span>
+            </>
+          ) : (
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              width='16'
+              height='16'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              strokeWidth='2'
+              strokeLinecap='round'
+              strokeLinejoin='round'
+            >
+              <rect
+                x='9'
+                y='9'
+                width='13'
+                height='13'
+                rx='2'
+                ry='2'
+              ></rect>
+              <path d='M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1'></path>
+            </svg>
+          )}
+        </button>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -618,11 +687,12 @@ export default function ProjectDetailsPage() {
                       rehypePlugins={[rehypeHighlight]}
                       components={{
                         img: ({ node, ...props }) => (
-                          <img
-                            {...props}
+                          <Image
                             src={transformImageUri(props.src || '')}
-                            className='max-w-full my-4 rounded-md'
                             alt={props.alt || ''}
+                            width={800}
+                            height={600}
+                            className='w-full h-auto my-4 rounded-md'
                           />
                         ),
                         a: ({ node, ...props }) => (
@@ -633,81 +703,7 @@ export default function ProjectDetailsPage() {
                             className='hover:underline'
                           />
                         ),
-                        pre: ({ node, ...props }: any) => {
-                          const [isCodeCopied, setIsCodeCopied] =
-                            useState(false);
-                          const preRef = React.useRef<HTMLPreElement>(null);
-
-                          const copyToClipboard = () => {
-                            if (preRef.current) {
-                              const codeElement =
-                                preRef.current.querySelector('code');
-                              const textToCopy = codeElement?.textContent || '';
-                              navigator.clipboard.writeText(textToCopy);
-                              setIsCodeCopied(true);
-                              setTimeout(() => setIsCodeCopied(false), 2000);
-                            }
-                          };
-
-                          return (
-                            <div className='relative group'>
-                              <pre
-                                {...props}
-                                ref={preRef}
-                                className='bg-[#1a1a1a] dark:bg-[#0d1117] p-4 rounded-md overflow-x-auto text-sm my-4'
-                              />
-                              <button
-                                onClick={copyToClipboard}
-                                className='absolute top-2 right-2 bg-[var(--card-border)] hover:bg-[var(--primary)] p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity'
-                                title='Copy code'
-                                aria-label='Copy code to clipboard'
-                              >
-                                {isCodeCopied ? (
-                                  <>
-                                    <svg
-                                      xmlns='http://www.w3.org/2000/svg'
-                                      width='16'
-                                      height='16'
-                                      viewBox='0 0 24 24'
-                                      fill='none'
-                                      stroke='currentColor'
-                                      strokeWidth='2'
-                                      strokeLinecap='round'
-                                      strokeLinejoin='round'
-                                    >
-                                      <polyline points='20 6 9 17 4 12'></polyline>
-                                    </svg>
-                                    <span className='absolute -bottom-8 right-0 bg-[var(--card-bg)] text-white text-xs py-1 px-2 rounded'>
-                                      Copied!
-                                    </span>
-                                  </>
-                                ) : (
-                                  <svg
-                                    xmlns='http://www.w3.org/2000/svg'
-                                    width='16'
-                                    height='16'
-                                    viewBox='0 0 24 24'
-                                    fill='none'
-                                    stroke='currentColor'
-                                    strokeWidth='2'
-                                    strokeLinecap='round'
-                                    strokeLinejoin='round'
-                                  >
-                                    <rect
-                                      x='9'
-                                      y='9'
-                                      width='13'
-                                      height='13'
-                                      rx='2'
-                                      ry='2'
-                                    ></rect>
-                                    <path d='M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1'></path>
-                                  </svg>
-                                )}
-                              </button>
-                            </div>
-                          );
-                        },
+                        pre: CustomPre,
                         code: ({ node, inline, ...props }: any) =>
                           inline ? (
                             <code

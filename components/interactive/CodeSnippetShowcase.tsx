@@ -127,13 +127,13 @@ export default function CodeSnippetShowcase({ username, repos }: CodeSnippetShow
                   break;
                 }
               } catch (error) {
-                console.log(`Could not fetch ${mainFile} for ${repo.name}:`, error);
+                
                 // Continue to next fallback
               }
             }
             }
           } catch (error) {
-            console.log(`Could not fetch content for ${repo.name}`);
+            
           }
         }
 
@@ -146,7 +146,7 @@ export default function CodeSnippetShowcase({ username, repos }: CodeSnippetShow
 
         setCodeSnippets(snippets);
       } catch (error) {
-        console.error('Error fetching code snippets:', error);
+        
       } finally {
         setLoading(false);
       }
@@ -312,7 +312,7 @@ export default function CodeSnippetShowcase({ username, repos }: CodeSnippetShow
         setTimeout(() => setCopiedId(null), 2000);
       }
     } catch (error) {
-      console.error('Failed to copy:', error);
+      
     }
   };
 

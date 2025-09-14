@@ -92,7 +92,7 @@ export default function ActivityGraph({ username, token }: ActivityGraphProps) {
               }
             }
           } catch (err) {
-            console.error(`Error fetching stats for ${repo.name}:`, err);
+            
             // Continue to next repo
           }
         }
@@ -148,7 +148,7 @@ export default function ActivityGraph({ username, token }: ActivityGraphProps) {
           );
         }
       } catch (error) {
-        console.error('Failed to load activity data:', error);
+        
         setError('Failed to load activity data');
       } finally {
         setLoading(false);
@@ -254,3 +254,4 @@ export default function ActivityGraph({ username, token }: ActivityGraphProps) {
     </div>
   );
 }
+

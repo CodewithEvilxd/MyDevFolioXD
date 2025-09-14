@@ -107,7 +107,7 @@ export default function NeuralNetworkPortfolioMorphing({ username }: NeuralNetwo
       // Save patterns
       localStorage.setItem(`portfolio_patterns_${username}`, JSON.stringify(visitorPatterns));
     } catch (error) {
-      console.error('Error learning from visitors:', error);
+      
     } finally {
       setIsLearning(false);
     }

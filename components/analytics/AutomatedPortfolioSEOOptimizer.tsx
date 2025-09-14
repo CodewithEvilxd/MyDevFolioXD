@@ -176,7 +176,7 @@ export default function AutomatedPortfolioSEOOptimizer({ username, repos }: Auto
       setAnalysis(analysis);
       setLastAnalyzed(new Date());
     } catch (error) {
-      console.error('Error analyzing SEO:', error);
+      
       // Fallback to basic analysis
       const basicAnalysis: SEOAnalysis = {
         overallScore: 70,

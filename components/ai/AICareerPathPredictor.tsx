@@ -129,16 +129,16 @@ Format your response as a JSON array of career recommendations:
       });
 
       if (aiResponse.success) {
-        console.log('AI Career Path response received, length:', aiResponse.content.length);
+        
 
         // Validate that the response looks like JSON
         const content = aiResponse.content.trim();
         if (!content.startsWith('[') && !content.startsWith('{')) {
-          console.warn('AI response does not appear to be JSON, using fallback. Response starts with:', content.substring(0, 100));
+          
         } else {
           try {
             const aiCareerPaths = JSON.parse(content);
-            console.log('Successfully parsed AI career paths:', aiCareerPaths.length);
+            
 
             if (Array.isArray(aiCareerPaths) && aiCareerPaths.length > 0) {
               // Validate the structure of the first career path
@@ -171,21 +171,21 @@ Format your response as a JSON array of career recommendations:
                 setIsAnalyzing(false);
                 return;
               } else {
-                console.warn('AI response structure is invalid, missing required fields');
+                
               }
             } else {
-              console.warn('AI response is not a valid array or is empty');
+              
             }
           } catch (parseError) {
-            console.warn('AI response parsing failed, using fallback. Error:', parseError);
-            console.warn('Raw AI response:', content.substring(0, 500));
+            
+            
           }
         }
       } else {
-        console.warn('AI response was not successful:', aiResponse.error);
+        
       }
     } catch (error) {
-      console.error('Error analyzing career paths:', error);
+      
     }
 
     // Fallback

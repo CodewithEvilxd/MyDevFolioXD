@@ -107,7 +107,7 @@ export default function CommitHistory({
               repo_url: repo.html_url,
             }));
           } catch (error) {
-            console.error(`Error fetching commits for ${repo.name}:`, error);
+            
             return [];
           }
         });
@@ -131,7 +131,7 @@ export default function CommitHistory({
           setCommits(fallbackCommits);
         }
       } catch (error) {
-        console.error('Failed to load commit history:', error);
+        
         setError('Failed to load commit history');
       } finally {
         setLoading(false);
@@ -231,3 +231,4 @@ export default function CommitHistory({
     </div>
   );
 }
+

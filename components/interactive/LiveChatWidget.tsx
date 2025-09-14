@@ -165,19 +165,19 @@ User message: ${message}`
 const callChatAPIWithFallback = async (message: string, context: string, setCurrentAPI?: (api: 'openrouter' | 'gemini' | 'fallback') => void): Promise<string> => {
   // Try OpenRouter first
   try {
-    console.log('Trying OpenRouter API...');
+    
     setCurrentAPI?.('openrouter');
     return await callOpenRouterAPI(message, context);
   } catch (error) {
-    console.warn('OpenRouter API failed:', error);
+    
 
     // Fallback to Gemini
     try {
-      console.log('Falling back to Gemini API...');
+      
       setCurrentAPI?.('gemini');
       return await callGeminiAPI(message, context);
     } catch (geminiError) {
-      console.error('Gemini API also failed:', geminiError);
+      
 
       // Final fallback to basic responses
       setCurrentAPI?.('fallback');
@@ -288,7 +288,7 @@ export default function LiveChatWidget() {
       }, 1000 + Math.random() * 1000);
 
     } catch (error) {
-      console.error('Chat error:', error);
+      
       setIsTyping(false);
 
       // Final fallback if all APIs fail
@@ -340,7 +340,7 @@ export default function LiveChatWidget() {
       }, 800 + Math.random() * 500);
 
     } catch (error) {
-      console.error('Quick reply error:', error);
+      
       setIsTyping(false);
 
       // Use the fallback response system

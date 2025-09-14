@@ -145,17 +145,17 @@ Format as JSON array.`;
       });
 
       if (aiResponse.success) {
-        console.log('AI Neural Dream response received, length:', aiResponse.content.length);
+        
 
         // Validate that the response looks like JSON
         const content = aiResponse.content.trim();
         if (!content.startsWith('[') && !content.startsWith('{')) {
-          console.warn('AI neural dream response does not appear to be JSON, using base patterns. Response starts with:', content.substring(0, 100));
+          
           setDreamPatterns(basePatterns);
         } else {
           try {
             const aiDreams = JSON.parse(content);
-            console.log('Successfully parsed AI neural dream patterns:', aiDreams.length);
+            
 
             if (Array.isArray(aiDreams) && aiDreams.length > 0) {
               // Validate the structure of the first dream
@@ -172,21 +172,21 @@ Format as JSON array.`;
                 }));
                 setDreamPatterns([...basePatterns, ...enhancedPatterns]);
               } else {
-                console.warn('AI neural dream response structure is invalid, using base patterns');
+                
                 setDreamPatterns(basePatterns);
               }
             } else {
-              console.warn('AI neural dream response is not a valid array or is empty, using base patterns');
+              
               setDreamPatterns(basePatterns);
             }
           } catch (error) {
-            console.warn('AI neural dream parsing failed, using base patterns. Error:', error);
-            console.warn('Raw AI neural dream response:', content.substring(0, 500));
+            
+            
             setDreamPatterns(basePatterns);
           }
         }
       } else {
-        console.warn('AI neural dream response was not successful:', aiResponse.error);
+        
         setDreamPatterns(basePatterns);
       }
 
@@ -202,7 +202,7 @@ Format as JSON array.`;
       setDreamSequence(sequence);
 
     } catch (error) {
-      console.error('Error generating dream patterns:', error);
+      
       setDreamPatterns([]);
     } finally {
       setIsDreaming(false);

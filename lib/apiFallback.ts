@@ -57,7 +57,7 @@ class APIFallbackService {
     }
 
     if (this.apis.length === 0) {
-      console.warn('No API keys configured. Please set OPENROUTER_API_KEY/GEMINI_API_KEY or NEXT_PUBLIC_OPENROUTER_API_KEY/NEXT_PUBLIC_GEMINI_API_KEY in your .env file');
+      
     }
   }
 
@@ -89,7 +89,7 @@ class APIFallbackService {
         };
       }
 
-      console.log(`🔄 Trying ${api.name} API...`);
+      
 
       const response = await fetch(url, {
         method: 'POST',
@@ -115,7 +115,7 @@ class APIFallbackService {
         throw new Error('Invalid response format from API');
       }
 
-      console.log(`✅ ${api.name} API succeeded`);
+      
       this.lastUsedAPI = api.name;
       this.failureCount.set(api.name, 0); // Reset failure count on success
 
@@ -126,7 +126,7 @@ class APIFallbackService {
       };
 
     } catch (error) {
-      console.error(`❌ ${api.name} API failed:`, error);
+      
       const currentFailures = this.failureCount.get(api.name) || 0;
       this.failureCount.set(api.name, currentFailures + 1);
 
@@ -156,20 +156,20 @@ class APIFallbackService {
     }
 
     // If primary fails, try other APIs
-    console.log(`🔄 Primary API (${primaryAPI.name}) failed, trying fallback APIs...`);
+    
 
     for (let i = 0; i < this.apis.length; i++) {
       if (i === this.currentPrimaryIndex) continue; // Skip the one that already failed
 
       const fallbackAPI = this.apis[i];
-      console.log(`🔄 Trying fallback API: ${fallbackAPI.name}`);
+      
 
       result = await this.callAPI(fallbackAPI, prompt, options);
 
       if (result.success) {
         // Switch primary to the working API for future requests
         this.currentPrimaryIndex = i;
-        console.log(`🔄 Switched primary API to ${fallbackAPI.name}`);
+        
         return result;
       }
     }
@@ -209,7 +209,7 @@ class APIFallbackService {
     const index = this.apis.findIndex(api => api.name === apiName);
     if (index !== -1) {
       this.currentPrimaryIndex = index;
-      console.log(`🔄 Manually switched to ${apiName} API`);
+      
       return true;
     }
     return false;

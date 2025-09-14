@@ -91,7 +91,7 @@ What would you like to know about your portfolio or development journey?`,
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('Chat error:', error);
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: '❌ Sorry, I\'m having trouble connecting right now. Please try again later.',

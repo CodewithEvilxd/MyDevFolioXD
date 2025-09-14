@@ -114,7 +114,7 @@ export default function PDFExport({ user, repos }: PDFExportProps) {
       URL.revokeObjectURL(url);
 
     } catch (error) {
-      console.error('Failed to generate PDF:', error);
+      
     } finally {
       setIsGenerating(false);
     }

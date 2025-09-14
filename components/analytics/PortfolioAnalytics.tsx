@@ -150,7 +150,7 @@ export default function PortfolioAnalytics() {
 
         setAnalyticsData(analyticsData);
       } catch (error) {
-        console.error('Error loading portfolio analytics:', error);
+        
         // Fallback to zero data
         setAnalyticsData({
           totalVisitors: 0,

@@ -33,9 +33,9 @@ function fibonacci(n) {
   return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
-console.log('Fibonacci sequence:');
+
 for (let i = 0; i < 10; i++) {
-  console.log(\`F(\${i}) = \${fibonacci(i)}\`);
+  
 }`);
   const [language, setLanguage] = useState('javascript');
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);

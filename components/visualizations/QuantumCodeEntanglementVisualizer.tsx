@@ -51,9 +51,7 @@ export default function QuantumCodeEntanglementVisualizer({ username, repos }: Q
 
             if (!contentsResponse.ok) {
               if (contentsResponse.status === 404) {
-                console.log(`Repository ${repo.name} not found or not accessible`);
               } else {
-                console.log(`Failed to fetch contents for ${repo.name}: ${contentsResponse.status}`);
               }
               continue;
             }
@@ -62,17 +60,14 @@ export default function QuantumCodeEntanglementVisualizer({ username, repos }: Q
             try {
               const responseText = await contentsResponse.text();
               if (responseText.trim() === '') {
-                console.log(`Empty response for contents in ${repo.name}`);
                 continue;
               }
               contents = JSON.parse(responseText);
             } catch (parseError) {
-              console.error(`Failed to parse contents JSON for ${repo.name}:`, parseError);
               continue;
             }
 
             if (!Array.isArray(contents)) {
-              console.error(`Contents data is not an array for ${repo.name}`);
               continue;
             }
 
@@ -108,11 +103,9 @@ export default function QuantumCodeEntanglementVisualizer({ username, repos }: Q
 
                 nodes.push(node);
               } catch (error) {
-                console.log(`Could not analyze ${file.name}`);
               }
             }
           } catch (error) {
-            console.log(`Could not analyze repo ${repo.name}`);
           }
         }
 
@@ -137,7 +130,6 @@ export default function QuantumCodeEntanglementVisualizer({ username, repos }: Q
 
         setDependencyGraph(entangledNodes);
       } catch (error) {
-        console.error('Error analyzing code entanglements:', error);
       } finally {
         setLoading(false);
       }

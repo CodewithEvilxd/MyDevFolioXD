@@ -66,7 +66,7 @@ export default function GitHubActivityHeatmap({ username }: GitHubActivityHeatma
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         } else {
-          console.warn('No GitHub token found, using public API (limited data)');
+          
         }
 
         const response = await fetch('https://api.github.com/graphql', {
@@ -79,7 +79,7 @@ export default function GitHubActivityHeatmap({ username }: GitHubActivityHeatma
         });
 
         if (!response.ok) {
-          console.warn('GitHub API failed:', response.status);
+          
           setError('Unable to fetch contribution data. Please ensure you have a valid GitHub token set.');
           return;
         }
@@ -87,7 +87,7 @@ export default function GitHubActivityHeatmap({ username }: GitHubActivityHeatma
         const data = await response.json();
 
         if (data.errors) {
-          console.warn('GraphQL errors:', data.errors);
+          
           setError('Unable to fetch contribution data. Please ensure you have a valid GitHub token set.');
           return;
         }
@@ -95,7 +95,7 @@ export default function GitHubActivityHeatmap({ username }: GitHubActivityHeatma
         const calendar = data.data?.user?.contributionsCollection?.contributionCalendar;
 
         if (!calendar) {
-          console.warn('No contribution data found');
+          
           setError('No contribution data available for this user/year combination.');
           return;
         }
@@ -114,7 +114,7 @@ export default function GitHubActivityHeatmap({ username }: GitHubActivityHeatma
 
         setContributionData(transformedData);
       } catch (err) {
-        console.error('Error fetching contribution data:', err);
+        
         setError('Failed to load contribution data. Please check your GitHub token.');
         setContributionData(null);
       } finally {

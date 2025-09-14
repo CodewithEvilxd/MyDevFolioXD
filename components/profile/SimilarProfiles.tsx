@@ -118,7 +118,7 @@ export default function SimilarProfiles({
                   }
                 }
               } catch (error) {
-                console.error('Error fetching contributors:', error);
+                
               }
             }
           }
@@ -193,7 +193,7 @@ export default function SimilarProfiles({
                   }
                 }
               } catch (error) {
-                console.error('Error fetching follower following:', error);
+                
               }
             }
           }
@@ -221,10 +221,7 @@ export default function SimilarProfiles({
 
               return simUser;
             } catch (error) {
-              console.error(
-                `Error fetching details for ${simUser.login}:`,
-                error
-              );
+              
               return simUser;
             }
           })
@@ -232,7 +229,7 @@ export default function SimilarProfiles({
 
         setSimilarUsers(enhancedUsers);
       } catch (error) {
-        console.error('Error finding similar profiles:', error);
+        
         setError('Failed to find similar profiles');
       } finally {
         setLoading(false);
@@ -303,3 +300,4 @@ export default function SimilarProfiles({
     </div>
   );
 }
+

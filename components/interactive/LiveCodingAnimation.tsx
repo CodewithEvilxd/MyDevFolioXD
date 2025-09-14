@@ -13,7 +13,7 @@ const codeSnippets = [
   stars: 1337
 };
 
-console.log('🚀 Building amazing portfolios!');`
+`
   },
   {
     language: 'Python',

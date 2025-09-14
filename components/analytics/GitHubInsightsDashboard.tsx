@@ -68,7 +68,7 @@ export default function GitHubInsightsDashboard({ username, repos, user }: GitHu
         setRepoInsights(realRepoInsights);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching insights data:', error);
+        
         // Set empty data instead of mock data
         setInsights([]);
         setRepoInsights([]);
@@ -714,3 +714,4 @@ export default function GitHubInsightsDashboard({ username, repos, user }: GitHu
     </motion.div>
   );
 }
+

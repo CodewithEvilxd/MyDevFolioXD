@@ -264,7 +264,7 @@ export default function SonicMeditationPortfolioEnvironment({ username, repos }:
       }, frequency.duration * 1000);
 
     } catch (error) {
-      console.log('Audio playback not available:', error);
+      
     }
   };
 

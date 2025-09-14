@@ -73,7 +73,7 @@ export default function MultiUniverseCareerSimulator({ username, user, repos }: 
       const simulatedUniverses = generateAlternativeUniverses(current);
       setUniverses(simulatedUniverses);
     } catch (error) {
-      console.error('Error simulating universes:', error);
+      
     } finally {
       setLoading(false);
       setSimulating(false);

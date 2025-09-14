@@ -48,7 +48,7 @@ export default function LiveCodingSessionRecorder() {
         }));
         setPastSessions(sessions);
       } catch (error) {
-        console.error('Error loading sessions:', error);
+        
       }
     }
   }, []);

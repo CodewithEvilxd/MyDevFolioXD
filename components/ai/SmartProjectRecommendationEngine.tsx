@@ -222,7 +222,7 @@ export default function SmartProjectRecommendationEngine({ username, repos }: Sm
 
       setRecommendations(filteredRecommendations);
     } catch (error) {
-      console.error('Error generating recommendations:', error);
+      
       // Fallback to basic recommendations
       setRecommendations([]);
     }

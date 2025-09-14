@@ -60,7 +60,7 @@ export default function RateLimitIndicator() {
         setRateLimit(data);
         setError('');
       } catch (err) {
-        console.error('Error fetching rate limit:', err);
+        
         setError('Could not fetch GitHub rate limit');
       } finally {
         setLoading(false);
@@ -234,3 +234,4 @@ export default function RateLimitIndicator() {
     </div>
   );
 }
+

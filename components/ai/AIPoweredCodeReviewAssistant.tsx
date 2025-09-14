@@ -68,7 +68,7 @@ export default function AIPoweredCodeReviewAssistant({ username, repos }: AIPowe
 
       setAnalyses(prev => [...prev, ...newAnalyses]);
     } catch (error) {
-      console.error('Error analyzing repositories:', error);
+      
     } finally {
       setIsAnalyzing(false);
     }
@@ -86,17 +86,17 @@ export default function AIPoweredCodeReviewAssistant({ username, repos }: AIPowe
       let issues: CodeReviewIssue[] = [];
 
       if (aiResponse.success) {
-        console.log('AI Code Review response received, length:', aiResponse.content.length);
+        
 
         // Validate that the response looks like JSON
         const content = aiResponse.content.trim();
         if (!content.startsWith('[') && !content.startsWith('{')) {
-          console.warn('AI code review response does not appear to be JSON, using fallback. Response starts with:', content.substring(0, 100));
+          
           issues = generateCodeReviewIssues(repo);
         } else {
           try {
             const aiIssues = JSON.parse(content);
-            console.log('Successfully parsed AI code review issues:', aiIssues.length);
+            
 
             if (Array.isArray(aiIssues) && aiIssues.length > 0) {
               // Validate the structure of the first issue
@@ -116,21 +116,21 @@ export default function AIPoweredCodeReviewAssistant({ username, repos }: AIPowe
                   confidence: issue.confidence || 0.5
                 }));
               } else {
-                console.warn('AI code review response structure is invalid, using fallback');
+                
                 issues = generateCodeReviewIssues(repo);
               }
             } else {
-              console.warn('AI code review response is not a valid array or is empty, using fallback');
+              
               issues = generateCodeReviewIssues(repo);
             }
           } catch (parseError) {
-            console.warn('AI code review response parsing failed, using fallback. Error:', parseError);
-            console.warn('Raw AI code review response:', content.substring(0, 500));
+            
+            
             issues = generateCodeReviewIssues(repo);
           }
         }
       } else {
-        console.warn('AI code review response was not successful:', aiResponse.error);
+        
         // Fallback to pattern-based issues if AI fails
         issues = generateCodeReviewIssues(repo);
       }

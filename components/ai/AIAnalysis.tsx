@@ -188,7 +188,7 @@ Format your response with clear sections and actionable insights. Be specific an
           setAnalysis(fallbackAnalysis);
         }
       } catch (error) {
-        console.error('Error generating AI analysis:', error);
+        
         setError('Failed to generate AI insights');
       } finally {
         setLoading(false);
@@ -254,3 +254,4 @@ Format your response with clear sections and actionable insights. Be specific an
     </div>
   );
 }
+

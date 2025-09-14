@@ -30,7 +30,7 @@ function calculateFactorial(n) {
 }
 
 const result = calculateFactorial(5);
-console.log('Factorial of 5:', result);
+
 
 // Try writing some code and watch the AI become conscious...`);
   const [patterns, setPatterns] = useState<CodePattern[]>([]);

@@ -30,14 +30,12 @@ async function tryOpenAI(message: string, systemPrompt: string) {
     });
 
     if (!response.ok) {
-      console.log('OpenAI failed, trying OpenRouter...');
       return null;
     }
 
     const data = await response.json();
 
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.log('OpenAI invalid response, trying OpenRouter...');
       return null;
     }
 
@@ -48,7 +46,6 @@ async function tryOpenAI(message: string, systemPrompt: string) {
     };
 
   } catch (error) {
-    console.log('OpenAI error:', error);
     return null;
   }
 }
@@ -85,14 +82,12 @@ async function tryOpenRouter(message: string, systemPrompt: string) {
     });
 
     if (!response.ok) {
-      console.log('OpenRouter failed, trying Gemini...');
       return null;
     }
 
     const data = await response.json();
 
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.log('OpenRouter invalid response, trying Gemini...');
       return null;
     }
 
@@ -103,7 +98,6 @@ async function tryOpenRouter(message: string, systemPrompt: string) {
     };
 
   } catch (error) {
-    console.log('OpenRouter error:', error);
     return null;
   }
 }
@@ -134,14 +128,12 @@ async function tryGemini(message: string, systemPrompt: string) {
     });
 
     if (!response.ok) {
-      console.log('Gemini API failed');
       return null;
     }
 
     const data = await response.json();
 
     if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
-      console.log('Gemini invalid response');
       return null;
     }
 
@@ -152,7 +144,6 @@ async function tryGemini(message: string, systemPrompt: string) {
     };
 
   } catch (error) {
-    console.log('Gemini error:', error);
     return null;
   }
 }
@@ -216,7 +207,6 @@ ${context ? `Additional context: ${context}` : ''}`;
     return NextResponse.json(result);
 
   } catch (error) {
-    console.error('Chat API error:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

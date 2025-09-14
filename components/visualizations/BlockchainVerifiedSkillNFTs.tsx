@@ -149,7 +149,7 @@ export default function BlockchainVerifiedSkillNFTs({ username, user, repos }: B
       localStorage.setItem(`skill_nfts_${username}`, JSON.stringify(updatedNFTs));
 
     } catch (error) {
-      console.error('Error minting NFT:', error);
+      
     } finally {
       setMintingSkill(null);
     }
