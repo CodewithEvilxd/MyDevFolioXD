@@ -8,6 +8,7 @@ import { LanguageProvider } from '@/lib/LanguageContext';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import VisitorCounter from '@/components/ui/VisitorCounter';
+import MusicPlayer from '@/components/ui/MusicPlayer';
 
 // Font for code and technical elements
 const jetbrainsMono = JetBrains_Mono({
@@ -72,11 +73,12 @@ export default function RootLayout({
             </div>
 
           <main className='flex-grow container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12'>
-            {children}
-            <Analytics />
-          </main>
+             {children}
+             <Analytics />
+           </main>
 
-          <VisitorCounter />
+           <VisitorCounter />
+           <MusicPlayer />
 
           <div className='fixed bottom-2 right-2 sm:bottom-4 sm:right-4'>
             <div className='bg-[var(--primary)] bg-opacity-10 backdrop-blur-sm border border-[var(--primary)] border-opacity-30 rounded-lg px-2 py-1 sm:px-3 sm:py-2 text-xs text-white'>

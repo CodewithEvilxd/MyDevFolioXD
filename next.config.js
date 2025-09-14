@@ -6,6 +6,7 @@ const nextConfig = {
       'avatars.githubusercontent.com',
       'github.com',
       'raw.githubusercontent.com',
+      'c.saavncdn.com',
     ],
   },
   // Optimize build output
