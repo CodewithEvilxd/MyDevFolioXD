@@ -28,6 +28,9 @@ export default function PortfolioTimeCrystal({ username }: PortfolioTimeCrystalP
   const crystalsRef = useRef<TimeCrystal[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const isVisibleRef = useRef(false);
+  const spaceGradientRef = useRef<CanvasGradient | null>(null);
+  const crystalGradientsRef = useRef<Map<string, CanvasGradient>>(new Map());
+  const starsRef = useRef<{ x: number; y: number; brightness: number }[]>([]);
 
   const [userData, setUserData] = useState<GitHubUserWithStats | null>(null);
   const [selectedCrystal, setSelectedCrystal] = useState<TimeCrystal | null>(null);
@@ -64,7 +67,7 @@ export default function PortfolioTimeCrystal({ username }: PortfolioTimeCrystalP
         size,
         opacity,
         rotation: Math.random() * 360,
-        facets: Math.floor(Math.random() * 8) + 6
+        facets: Math.floor(Math.random() * 4) + 4
       });
     }
 
@@ -77,11 +80,15 @@ export default function PortfolioTimeCrystal({ username }: PortfolioTimeCrystalP
     ctx.translate(x, y);
     ctx.rotate((crystal.rotation * Math.PI) / 180);
 
-    // Create crystal gradient
-    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, crystal.size);
-    gradient.addColorStop(0, `rgba(168, 85, 247, ${crystal.opacity})`);
-    gradient.addColorStop(0.5, `rgba(236, 72, 153, ${crystal.opacity * 0.8})`);
-    gradient.addColorStop(1, `rgba(59, 130, 246, ${crystal.opacity * 0.6})`);
+    // Get or create crystal gradient
+    let gradient = crystalGradientsRef.current.get(crystal.id);
+    if (!gradient) {
+      gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, crystal.size);
+      gradient.addColorStop(0, `rgba(168, 85, 247, ${crystal.opacity})`);
+      gradient.addColorStop(0.5, `rgba(236, 72, 153, ${crystal.opacity * 0.8})`);
+      gradient.addColorStop(1, `rgba(59, 130, 246, ${crystal.opacity * 0.6})`);
+      crystalGradientsRef.current.set(crystal.id, gradient);
+    }
 
     ctx.fillStyle = gradient;
 
@@ -108,25 +115,6 @@ export default function PortfolioTimeCrystal({ username }: PortfolioTimeCrystalP
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Draw inner facets
-    ctx.strokeStyle = `rgba(255, 255, 255, ${crystal.opacity * 0.4})`;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let i = 0; i < crystal.facets; i++) {
-      const angle = i * angleStep;
-      const radius = crystal.size * 0.6;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-    ctx.closePath();
-    ctx.stroke();
-
     ctx.restore();
   }, []);
 
@@ -137,27 +125,36 @@ export default function PortfolioTimeCrystal({ username }: PortfolioTimeCrystalP
     if (!canvas || !ctx) return;
 
     // Clear canvas with space background
-    const spaceGradient = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height / 2, 0,
-      canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 2
-    );
-    spaceGradient.addColorStop(0, '#0f172a');
-    spaceGradient.addColorStop(1, '#000000');
+    if (!spaceGradientRef.current) {
+      spaceGradientRef.current = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, 0,
+        canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 2
+      );
+      spaceGradientRef.current.addColorStop(0, '#0f172a');
+      spaceGradientRef.current.addColorStop(1, '#000000');
+    }
 
-    ctx.fillStyle = spaceGradient;
+    ctx.fillStyle = spaceGradientRef.current;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw stars
-    for (let i = 0; i < 100; i++) {
-      const x = (i * 37) % canvas.width;
-      const y = (i * 23) % canvas.height;
-      const brightness = 0.3 + Math.sin(Date.now() * 0.001 + i) * 0.2;
-
-      ctx.fillStyle = `rgba(255, 255, 255, ${brightness})`;
-      ctx.beginPath();
-      ctx.arc(x, y, 1, 0, Math.PI * 2);
-      ctx.fill();
+    if (starsRef.current.length === 0) {
+      starsRef.current = [];
+      for (let i = 0; i < 50; i++) {
+        starsRef.current.push({
+          x: (i * 37) % canvas.width,
+          y: (i * 23) % canvas.height,
+          brightness: 0.3 + Math.random() * 0.4
+        });
+      }
     }
+
+    starsRef.current.forEach(star => {
+      ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, 1, 0, Math.PI * 2);
+      ctx.fill();
+    });
 
     const crystals = crystalsRef.current;
 
@@ -228,6 +225,9 @@ export default function PortfolioTimeCrystal({ username }: PortfolioTimeCrystalP
     if (container) {
       canvas.width = container.clientWidth;
       canvas.height = container.clientHeight;
+      // Reset cached gradients and stars on resize
+      spaceGradientRef.current = null;
+      starsRef.current = [];
     }
   }, []);
 
