@@ -20,12 +20,19 @@ export default function HomePage() {
   useEffect(() => {
     setMounted(true);
 
+    let throttleTimer: NodeJS.Timeout;
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      clearTimeout(throttleTimer);
+      throttleTimer = setTimeout(() => {
+        setMousePosition({ x: e.clientX, y: e.clientY });
+      }, 16); // ~60fps throttling
     };
 
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      clearTimeout(throttleTimer);
+    };
   }, []);
 
   const handleSubmit = (e: FormEvent) => {

@@ -47,12 +47,12 @@ function resetDailyCounters(data: any): any {
 
 export async function GET() {
   try {
-    const data = JSON.parse(fs.readFileSync(visitorDataFile, 'utf8'));
+    const data = JSON.parse(await fs.promises.readFile(visitorDataFile, 'utf8'));
 
     // Reset daily counters if needed
     if (shouldResetDailyCounters(data.lastReset)) {
       const updatedData = resetDailyCounters(data);
-      fs.writeFileSync(visitorDataFile, JSON.stringify(updatedData));
+      await fs.promises.writeFile(visitorDataFile, JSON.stringify(updatedData));
       return NextResponse.json({
         totalUniqueVisitors: updatedData.totalUniqueVisitors,
         todayVisitors: 0
@@ -76,7 +76,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const data = JSON.parse(fs.readFileSync(visitorDataFile, 'utf8'));
+    const data = JSON.parse(await fs.promises.readFile(visitorDataFile, 'utf8'));
     const deviceFingerprint = generateDeviceFingerprint(request);
     const today = new Date().toISOString().split('T')[0];
 
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       updatedData.deviceFingerprints[deviceFingerprint].lastVisit = new Date().toISOString();
 
       // Save updated data
-      fs.writeFileSync(visitorDataFile, JSON.stringify(updatedData));
+      await fs.promises.writeFile(visitorDataFile, JSON.stringify(updatedData));
     }
 
     return NextResponse.json({

@@ -26,6 +26,8 @@ export default function PortfolioTimeCrystal({ username }: PortfolioTimeCrystalP
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const crystalsRef = useRef<TimeCrystal[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isVisibleRef = useRef(false);
 
   const [userData, setUserData] = useState<GitHubUserWithStats | null>(null);
   const [selectedCrystal, setSelectedCrystal] = useState<TimeCrystal | null>(null);
@@ -181,9 +183,11 @@ export default function PortfolioTimeCrystal({ username }: PortfolioTimeCrystalP
     });
   }, [drawCrystal]);
 
-  // Animation loop
+  // Animation loop with visibility check
   const animate = useCallback(() => {
-    render();
+    if (isVisibleRef.current) {
+      render();
+    }
     animationRef.current = requestAnimationFrame(animate);
   }, [render]);
 
@@ -257,6 +261,29 @@ export default function PortfolioTimeCrystal({ username }: PortfolioTimeCrystalP
     };
   }, [username, createTimeCrystals, animate]);
 
+  // Visibility detection
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          isVisibleRef.current = entry.isIntersecting;
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    const container = containerRef.current;
+    if (container) {
+      observer.observe(container);
+    }
+
+    return () => {
+      if (container) {
+        observer.unobserve(container);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
@@ -275,7 +302,7 @@ export default function PortfolioTimeCrystal({ username }: PortfolioTimeCrystalP
   }
 
   return (
-    <div className="relative w-full h-96 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-lg overflow-hidden">
+    <div ref={containerRef} className="relative w-full h-96 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-lg overflow-hidden">
       {/* Canvas */}
       <canvas
         ref={canvasRef}

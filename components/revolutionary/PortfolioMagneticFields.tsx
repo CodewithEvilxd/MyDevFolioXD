@@ -28,6 +28,8 @@ export default function PortfolioMagneticFields({ username }: PortfolioMagneticF
   const animationRef = useRef<number>();
   const particlesRef = useRef<MagneticParticle[]>([]);
   const mouseRef = useRef({ x: 0, y: 0, charge: 1 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isVisibleRef = useRef(false);
 
   const [userData, setUserData] = useState<GitHubUserWithStats | null>(null);
   const [fieldStrength, setFieldStrength] = useState(50);
@@ -265,10 +267,12 @@ export default function PortfolioMagneticFields({ username }: PortfolioMagneticF
     });
   }, []);
 
-  // Animation loop
+  // Animation loop with visibility check
   const animate = useCallback(() => {
-    updateParticles();
-    render();
+    if (isVisibleRef.current) {
+      updateParticles();
+      render();
+    }
     animationRef.current = requestAnimationFrame(animate);
   }, [updateParticles, render]);
 
@@ -333,6 +337,29 @@ export default function PortfolioMagneticFields({ username }: PortfolioMagneticF
     return () => window.removeEventListener('resize', resizeCanvas);
   }, [resizeCanvas]);
 
+  // Visibility detection
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          isVisibleRef.current = entry.isIntersecting;
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentContainer = containerRef.current;
+    if (currentContainer) {
+      observer.observe(currentContainer);
+    }
+
+    return () => {
+      if (currentContainer) {
+        observer.unobserve(currentContainer);
+      }
+    };
+  }, []);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -345,7 +372,7 @@ export default function PortfolioMagneticFields({ username }: PortfolioMagneticF
   }
 
   return (
-    <div className="relative w-full h-96 bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 rounded-lg overflow-hidden">
+    <div ref={containerRef} className="relative w-full h-96 bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 rounded-lg overflow-hidden">
       {/* Canvas */}
       <canvas
         ref={canvasRef}

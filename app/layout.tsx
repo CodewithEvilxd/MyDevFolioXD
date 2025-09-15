@@ -5,10 +5,12 @@ import './globals.css';
 import { Analytics } from '@vercel/analytics/next';
 import { ThemeProvider } from '@/lib/ThemeProvider';
 import { LanguageProvider } from '@/lib/LanguageContext';
-import ThemeToggle from '@/components/ui/ThemeToggle';
-import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
-import VisitorCounter from '@/components/ui/VisitorCounter';
-import MusicPlayer from '@/components/ui/MusicPlayer';
+import dynamic from 'next/dynamic';
+
+const ThemeToggle = dynamic(() => import('@/components/ui/ThemeToggle'), { ssr: false });
+const LanguageSwitcher = dynamic(() => import('@/components/ui/LanguageSwitcher'), { ssr: false });
+const VisitorCounter = dynamic(() => import('@/components/ui/VisitorCounter'), { ssr: false });
+const MusicPlayer = dynamic(() => import('@/components/ui/MusicPlayer'), { ssr: false });
 
 // Font for code and technical elements
 const jetbrainsMono = JetBrains_Mono({
